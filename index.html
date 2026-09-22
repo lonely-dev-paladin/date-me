@@ -613,6 +613,32 @@
         transform: translate(-50%, 0);
       }
 
+      /* ---------- Extras ---------- */
+      .ps {
+        margin: 0.9rem 0 0;
+        color: var(--muted);
+      }
+      .group {
+        margin-top: 1.75rem;
+      }
+      .group h2 {
+        margin-bottom: 0.25rem;
+      }
+      .chip.small {
+        min-height: 36px;
+        padding: 0.4rem 0.8rem;
+        font-size: 0.92rem;
+      }
+      .ideas {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.5rem;
+      }
+      .reveal h1 {
+        font-size: clamp(2.4rem, 10vw, 3.8rem);
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .shapes {
           animation: none;
@@ -703,7 +729,7 @@
           garden: { name: "Garden", dots: ["#CDE8D8", "#F4A6B7", "#1F6B45"] },
         };
         var DEFAULT_Q = "Would you go on a date with me?";
-        var TOTAL_STEPS = 5;
+        var TOTAL_STEPS = 8;
 
         var FOOD = [
           "Filipino",
@@ -741,6 +767,62 @@
           "Flexible",
         ];
         var BUDGET = ["Keep it easy", "Comfortable", "Treat ourselves"];
+        var DRINKS = [
+          "Coffee",
+          "Milk tea",
+          "Fruit shake",
+          "Wine",
+          "Cocktails",
+          "Beer",
+          "Water is fine",
+        ];
+        var DESSERTS = [
+          "Ice cream",
+          "Cake",
+          "Halo-halo",
+          "Chocolate",
+          "Pastries",
+          "Fruit",
+          "Skip dessert",
+        ];
+        var AFTER = [
+          "Walk around",
+          "Arcade or games",
+          "Karaoke",
+          "Stargazing",
+          "Take photos",
+          "Dessert run",
+          "Movie night at home",
+          "Go home early",
+          "Nothing planned",
+        ];
+        var DRESS = [
+          "Casual",
+          "Smart casual",
+          "Dressed up",
+          "As comfy as possible",
+          "Surprise me",
+        ];
+        var GETTING = ["Meet there", "Pick me up", "Commute together"];
+        var FLIRT = [
+          "Can\u2019t wait to see you.",
+          "Fair warning: I\u2019m hard to impress. Good luck.",
+          "I\u2019ll save you the best seat.",
+          "Bring your appetite and your smile.",
+          "Don\u2019t be late. I\u2019m already excited.",
+        ];
+        var PS_IDEAS = [
+          "P.S. Say yes and I\u2019ll pick the restaurant.",
+          "P.S. No pressure, but I already cleared my schedule.",
+          "P.S. I\u2019ve been rehearsing this for days.",
+          "P.S. I promise I\u2019m more fun than this website.",
+        ];
+        var YES_IDEAS = [
+          "Good. I was nervous for a second there.",
+          "Best answer I could have hoped for.",
+          "Now I have something to look forward to.",
+          "You just made my day.",
+        ];
         var VIBES = [
           ["Simple and relaxed", "Casual, comfy, no pressure"],
           ["Elegant", "Dress up a little, get a nice table"],
@@ -765,19 +847,28 @@
             s: prefersDark ? "evening" : "lilac",
             d: 0,
             t: 1,
+            p: "",
+            y: "",
           },
           invite: null,
           link: "",
           ans: {
             food: [],
             avoid: "",
+            drinks: [],
+            dessert: [],
             vibe: "",
             budget: "",
             places: [],
             ideas: "",
+            after: [],
+            dress: "",
+            getting: "",
             when: [],
             day: "",
             note: "",
+            flirt: "",
+            flirtOwn: "",
           },
           reply: "",
         };
@@ -818,6 +909,8 @@
               s: SKINS[j.s] ? j.s : "lilac",
               d: j.d ? 1 : 0,
               t: j.t ? 1 : 0,
+              p: typeof j.p === "string" ? j.p.slice(0, 100) : "",
+              y: typeof j.y === "string" ? j.y.slice(0, 100) : "",
             };
           } catch (e) {
             return null;
@@ -892,10 +985,15 @@
           }
           add("Food", A.food.join(", "));
           add("Avoid", A.avoid);
+          add("Drinks", A.drinks.join(", "));
+          add("Dessert", A.dessert.join(", "));
           add("Vibe", A.vibe);
           add("Budget", A.budget);
           add("Places", A.places.join(", "));
           add("Place ideas", A.ideas);
+          add("After", A.after.join(", "));
+          add("Dress code", A.dress);
+          add("Getting there", A.getting);
           add(
             "When",
             [A.when.join(", "), A.day ? fmtDay(A.day) : ""]
@@ -904,6 +1002,9 @@
           );
           add("Note", A.note);
           return out;
+        }
+        function A_flirt() {
+          return state.ans.flirtOwn.trim() || state.ans.flirt;
         }
         function yesMessage() {
           var inv = state.invite,
@@ -917,6 +1018,8 @@
                 return "\u2022 " + r[0] + ": " + r[1];
               }).join("\n");
           }
+          var line = (A_flirt() || "").trim();
+          if (line) t += "\n\n" + line;
           return t + "\n\n\u2014 " + inv.b;
         }
         function waHref(text) {
@@ -950,6 +1053,21 @@
               .join("") +
             "</div>"
           );
+        }
+        function ideaChips(field, list) {
+          return list
+            .map(function (t) {
+              return (
+                '<button type="button" class="chip small" data-fill="' +
+                field +
+                '" data-text="' +
+                esc(t) +
+                '">' +
+                esc(t) +
+                "</button>"
+              );
+            })
+            .join("");
         }
         function tiles() {
           return (
@@ -1065,6 +1183,21 @@
             '<label class="check"><input type="checkbox" data-f="d" ' +
             (d.d ? "checked" : "") +
             '><span>Make the No button dodge<span class="hint">It stops dodging after a few tries, so a real No always works.</span></span></label>' +
+            "<fieldset><legend>Flirty touches (optional)</legend>" +
+            '<div class="field"><label for="f-p">A line under your question</label>' +
+            '<input id="f-p" type="text" data-f="p" maxlength="100" placeholder="P.S. \u2026" value="' +
+            esc(d.p) +
+            '">' +
+            '<div class="ideas">' +
+            ideaChips("p", PS_IDEAS) +
+            "</div></div>" +
+            '<div class="field"><label for="f-y">A message they see after saying yes</label>' +
+            '<input id="f-y" type="text" data-f="y" maxlength="100" placeholder="Shown before they plan the date" value="' +
+            esc(d.y) +
+            '">' +
+            '<div class="ideas">' +
+            ideaChips("y", YES_IDEAS) +
+            "</div></div></fieldset>" +
             '<p class="error" id="err" role="alert"></p>' +
             '<div class="row"><button type="button" class="btn primary" data-act="make">Create invitation link</button>' +
             '<button type="button" class="btn" data-act="preview">Preview</button></div>' +
@@ -1087,6 +1220,7 @@
             '<p class="from">From ' +
             esc(inv.a) +
             "</p>" +
+            (inv.p ? '<p class="ps">' + esc(inv.p) + "</p>" : "") +
             '<div class="stack">' +
             '<button type="button" class="btn primary big" data-act="yes">Yes</button>' +
             '<button type="button" class="btn big" id="nobtn" data-act="no">No</button>' +
@@ -1137,6 +1271,7 @@
             inv = state.invite,
             A = state.ans,
             body = "";
+          var pick = '<p class="muted">Pick as many as you like.</p>';
           if (i === 0) {
             body =
               '<h1 class="q">What are you in the mood to eat?</h1><p class="muted">You said yes. Now for the fun part. Pick as many as you like.</p>' +
@@ -1147,21 +1282,47 @@
               '"></div>';
           } else if (i === 1) {
             body =
+              '<h1 class="q">Drinks and dessert?</h1>' +
+              pick +
+              '<div class="group"><h2>What are we drinking?</h2>' +
+              chips("drinks", DRINKS, "multi") +
+              "</div>" +
+              '<div class="group"><h2>And for dessert?</h2>' +
+              chips("dessert", DESSERTS, "multi") +
+              "</div>";
+          } else if (i === 2) {
+            body =
               '<h1 class="q">What kind of date sounds right?</h1><p class="muted">Choose the feeling you\u2019d like.</p>' +
               tiles() +
               "<h2>What\u2019s the budget feeling?</h2>" +
               chips("budget", BUDGET, "single");
-          } else if (i === 2) {
-            body =
-              '<h1 class="q">Where would you like to go?</h1><p class="muted">Pick as many as you like.</p>' +
-              chips("places", PLACES, "multi") +
-              '<div class="field" style="margin-top:1.25rem"><label for="ideas">Have a specific place in mind?</label>' +
-              '<input id="ideas" type="text" data-a="ideas" maxlength="120" placeholder="A café you\u2019ve been wanting to try" value="' +
-              esc(A.ideas) +
-              '"></div>';
           } else if (i === 3) {
             body =
-              '<h1 class="q">When works for you?</h1><p class="muted">Pick as many as you like.</p>' +
+              '<h1 class="q">Where would you like to go?</h1>' +
+              pick +
+              chips("places", PLACES, "multi") +
+              '<div class="field" style="margin-top:1.25rem"><label for="ideas">Have a specific place in mind?</label>' +
+              '<input id="ideas" type="text" data-a="ideas" maxlength="120" placeholder="A caf\u00e9 you\u2019ve been wanting to try" value="' +
+              esc(A.ideas) +
+              '"></div>';
+          } else if (i === 4) {
+            body =
+              '<h1 class="q">What should we do after?</h1>' +
+              pick +
+              chips("after", AFTER, "multi");
+          } else if (i === 5) {
+            body =
+              '<h1 class="q">The little details</h1><p class="muted">Pick one for each.</p>' +
+              '<div class="group"><h2>What should we wear?</h2>' +
+              chips("dress", DRESS, "single") +
+              "</div>" +
+              '<div class="group"><h2>How do we get there?</h2>' +
+              chips("getting", GETTING, "single") +
+              "</div>";
+          } else if (i === 6) {
+            body =
+              '<h1 class="q">When works for you?</h1>' +
+              pick +
               chips("when", WHEN, "multi") +
               '<div class="field" style="margin-top:1.25rem"><label for="day">A specific day, if you have one</label>' +
               '<input id="day" type="date" data-a="day" value="' +
@@ -1171,11 +1332,17 @@
             body =
               '<h1 class="q">Anything else for ' +
               esc(inv.a) +
-              '?</h1><p class="muted">Optional. A song to play, a dress code, a joke.</p>' +
-              '<div class="field"><label for="note" class="muted" style="font-weight:400">Your note</label>' +
-              '<textarea id="note" data-a="note" rows="4" maxlength="300">' +
+              '?</h1><p class="muted">Both parts are optional.</p>' +
+              '<div class="field"><label for="note">A note</label>' +
+              '<textarea id="note" data-a="note" rows="3" maxlength="300" placeholder="A song to play, a joke, a request">' +
               esc(A.note) +
-              "</textarea></div>";
+              "</textarea></div>" +
+              '<div class="group"><h2>Add a little something</h2><p class="muted">Pick a line to end your message with, or write your own.</p>' +
+              chips("flirt", FLIRT, "single") +
+              '<div class="field" style="margin-top:1rem"><label for="flirtOwn">Or write your own</label>' +
+              '<input id="flirtOwn" type="text" data-a="flirtOwn" maxlength="100" value="' +
+              esc(A.flirtOwn) +
+              '"></div></div>';
           }
           return (
             banner() +
@@ -1186,6 +1353,23 @@
             '<button type="button" class="btn primary" data-act="next">' +
             (i === TOTAL_STEPS - 1 ? "See my plan" : "Next") +
             "</button></div>" +
+            "</section>" +
+            footer()
+          );
+        }
+
+        function screenReveal() {
+          var inv = state.invite;
+          return (
+            banner() +
+            '<section class="card invite reveal">' +
+            '<p class="to">' +
+            esc(inv.a) +
+            " says:</p>" +
+            "<h1>" +
+            esc(inv.y) +
+            "</h1>" +
+            '<div class="stack"><button type="button" class="btn primary big" data-act="startplan">Plan our date</button></div>' +
             "</section>" +
             footer()
           );
@@ -1244,6 +1428,7 @@
           var html;
           if (s === "create") html = screenCreate();
           else if (s === "invite") html = screenInvite();
+          else if (s === "reveal") html = screenReveal();
           else if (s === "no" || s === "maybe") html = screenReply(s);
           else if (s === "plan") html = screenPlan();
           else html = screenDone();
@@ -1299,6 +1484,8 @@
             s: d.s,
             d: d.d ? 1 : 0,
             t: d.t ? 1 : 0,
+            p: d.p.trim(),
+            y: d.y.trim(),
           };
         }
 
@@ -1347,6 +1534,11 @@
               );
               break;
             case "yes":
+              state.screen = inv.y ? "reveal" : "plan";
+              state.step = 0;
+              render();
+              break;
+            case "startplan":
               state.screen = "plan";
               state.step = 0;
               render();
@@ -1446,6 +1638,17 @@
                     String(state.ans[key] === x.dataset.val),
                   );
                 });
+            }
+            return;
+          }
+          var fill = e.target.closest("button[data-fill]");
+          if (fill) {
+            var fk = fill.dataset.fill;
+            state.draft[fk] = fill.dataset.text;
+            var box = document.getElementById("f-" + fk);
+            if (box) {
+              box.value = fill.dataset.text;
+              box.focus();
             }
             return;
           }
