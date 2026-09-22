@@ -1,212 +1,788 @@
-/* ---------- Tokens ---------- */
-:root{
-  --bg:#DCD0FB; --ink:#22143A; --paper:#FBF8FF; --muted:#5B4B78;
-  --a:#B0124A; --a-ink:#FFFFFF; --b:#FFD866; --b-ink:#22143A; --c:#7FD6B0;
-  --display:'Bricolage Grotesque',ui-rounded,'Trebuchet MS',system-ui,sans-serif;
-  --body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  color-scheme:light;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+/* =========================================================================
+   Will you go on a date with me? — main.css
+   -------------------------------------------------------------------------
+     1. COLOR TOKENS     — the default palette, dark mode, and the three
+                            "look" choices (lilac / evening / garden)
+     2. BASE             — resets and defaults for plain HTML elements
+     3. BACKGROUND SHAPES — the animated paper-cut shapes behind every screen
+     4. LAYOUT            — the page wrapper and card containers
+     5. BUTTONS           — every button style, including the dodging "No"
+     6. FORM FIELDS        — text inputs, checkboxes, error messages
+     7. CHIPS AND TILES    — the option buttons used on the planner screens
+     8. INVITATION SCREEN  — text sizing specific to the invite/reveal screens
+     9. PLANNER SCREEN     — progress bar and the final summary list
+    10. SMALL PIECES       — the preview banner and the "copied" toast
+    11. MOTION PREFERENCES — turns off animation for people who ask for it
+   ========================================================================= */
+
+/* =========================================================================
+   1. COLOR TOKENS
+   Every color used anywhere in the site is a CSS variable here, so a
+   new "look" only needs to redefine this one block.
+   ========================================================================= */
+
+:root {
+  --bg: #DCD0FB;
+  --ink: #22143A;
+  --paper: #FBF8FF;
+  --muted: #5B4B78;
+  --a: #B0124A;
+  --a-ink: #FFFFFF;
+  --b: #FFD866;
+  --b-ink: #22143A;
+  --c: #7FD6B0;
+
+  --display: 'Bricolage Grotesque', ui-rounded, 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#1B1030; --ink:#F5EDFF; --paper:#2A1B47; --muted:#BBA9DD;
-    --a:#FFB4C8; --a-ink:#2A0F1E; --b:#F7C948; --b-ink:#2A1B00; --c:#7B5CE0;
-    color-scheme:dark;
+
+/* Follow the device's dark mode automatically, unless a specific
+   "look" below has already set its own colors. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1B1030;
+    --ink: #F5EDFF;
+    --paper: #2A1B47;
+    --muted: #BBA9DD;
+    --a: #FFB4C8;
+    --a-ink: #2A0F1E;
+    --b: #F7C948;
+    --b-ink: #2A1B00;
+    --c: #7B5CE0;
+    color-scheme: dark;
   }
 }
-:root[data-theme="dark"]{
-  --bg:#1B1030; --ink:#F5EDFF; --paper:#2A1B47; --muted:#BBA9DD;
-  --a:#FFB4C8; --a-ink:#2A0F1E; --b:#F7C948; --b-ink:#2A1B00; --c:#7B5CE0;
-  color-scheme:dark;
-}
-/* Invitation looks, chosen by the person sending the invite */
-:root[data-skin="lilac"]{
-  --bg:#DCD0FB; --ink:#22143A; --paper:#FBF8FF; --muted:#5B4B78;
-  --a:#B0124A; --a-ink:#FFFFFF; --b:#FFD866; --b-ink:#22143A; --c:#7FD6B0;
-  color-scheme:light;
-}
-:root[data-skin="evening"]{
-  --bg:#1B1030; --ink:#F5EDFF; --paper:#2A1B47; --muted:#BBA9DD;
-  --a:#FFB4C8; --a-ink:#2A0F1E; --b:#F7C948; --b-ink:#2A1B00; --c:#7B5CE0;
-  color-scheme:dark;
-}
-:root[data-skin="garden"]{
-  --bg:#CDE8D8; --ink:#12301F; --paper:#F4FBF6; --muted:#3F6350;
-  --a:#1F6B45; --a-ink:#FFFFFF; --b:#F4A6B7; --b-ink:#12301F; --c:#FFD866;
-  color-scheme:light;
+
+:root[data-theme="dark"] {
+  --bg: #1B1030;
+  --ink: #F5EDFF;
+  --paper: #2A1B47;
+  --muted: #BBA9DD;
+  --a: #FFB4C8;
+  --a-ink: #2A0F1E;
+  --b: #F7C948;
+  --b-ink: #2A1B00;
+  --c: #7B5CE0;
+  color-scheme: dark;
 }
 
-/* ---------- Base ---------- */
-*,*::before,*::after{box-sizing:inherit}
-html{background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px)}
-body{
-  margin:0;background:var(--bg);color:var(--ink);
-  font:400 1.0625rem/1.55 var(--body);
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-}
-button,input,textarea{font:inherit;color:inherit}
-h1,h2{margin:0}
-h1{
-  font:800 clamp(2.1rem,8.5vw,3.25rem)/1.03 var(--display);
-  letter-spacing:-.02em;margin:.25rem 0 1rem;text-wrap:balance;
-}
-h1:focus{outline:none}
-h2{font:700 1.4rem/1.15 var(--display);letter-spacing:-.01em;margin-bottom:.5rem}
-p{margin:0 0 1rem}
-.lede{font-size:1.15rem;max-width:34ch}
-.muted{color:var(--muted)}
-.hint{display:block;color:var(--muted);font-size:.92rem;font-weight:400}
+/* Invitation looks, chosen by the person sending the invite.
+   main.js sets data-skin on <html> to switch between these. */
 
-/* ---------- Paper-cut shapes ---------- */
-.shapes{
-  position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;
-  animation:shapesIn .9s cubic-bezier(.2,.8,.2,1) both;
+:root[data-skin="lilac"] {
+  --bg: #DCD0FB;
+  --ink: #22143A;
+  --paper: #FBF8FF;
+  --muted: #5B4B78;
+  --a: #B0124A;
+  --a-ink: #FFFFFF;
+  --b: #FFD866;
+  --b-ink: #22143A;
+  --c: #7FD6B0;
+  color-scheme: light;
 }
-.sh{position:absolute;transition:transform .9s cubic-bezier(.3,.8,.3,1)}
-.sh1{width:72vmin;height:72vmin;border-radius:50%;background:var(--b);top:-24vmin;right:-26vmin}
-.sh2{width:52vmin;height:52vmin;bottom:-14vmin;left:-16vmin}
-.sh3{width:40vmin;height:20vmin;border-radius:40vmin 40vmin 0 0;background:var(--c);bottom:10vmin;right:-8vmin}
-.sh4{width:24vmin;height:24vmin;border-radius:0 100% 0 100%;background:var(--a);top:24vmin;left:-8vmin}
-body[data-screen="invite"] .sh1{transform:translate(-10vmin,14vmin) scale(1.1)}
-body[data-screen="invite"] .sh2{transform:translate(6vmin,-4vmin) rotate(25deg)}
-body[data-screen="invite"] .sh3{transform:translate(-14vmin,-6vmin)}
-body[data-screen="invite"] .sh4{transform:translate(10vmin,8vmin) rotate(20deg)}
-body[data-screen="plan"] .sh1{transform:translate(12vmin,44vmin) scale(.8)}
-body[data-screen="plan"] .sh2{transform:translate(22vmin,-46vmin) rotate(-30deg) scale(.8)}
-body[data-screen="plan"] .sh3{transform:translate(-20vmin,-40vmin) rotate(-8deg)}
-body[data-screen="plan"] .sh4{transform:translate(14vmin,52vmin) rotate(-40deg)}
-body[data-screen="done"] .sh1{transform:translate(-16vmin,64vmin) scale(.9)}
-body[data-screen="done"] .sh2{transform:translate(30vmin,-8vmin) rotate(60deg) scale(1.1)}
-body[data-screen="done"] .sh3{transform:translate(-30vmin,-30vmin)}
-body[data-screen="done"] .sh4{transform:translate(4vmin,-6vmin) rotate(70deg) scale(1.3)}
-@keyframes shapesIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 
-/* ---------- Layout ---------- */
-.wrap{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:1.5rem 1rem 3.5rem}
-.card{
-  background:var(--paper);color:var(--ink);
-  border:2px solid var(--ink);border-radius:28px;
-  padding:1.5rem 1.25rem;margin-bottom:1rem;
+:root[data-skin="evening"] {
+  --bg: #1B1030;
+  --ink: #F5EDFF;
+  --paper: #2A1B47;
+  --muted: #BBA9DD;
+  --a: #FFB4C8;
+  --a-ink: #2A0F1E;
+  --b: #F7C948;
+  --b-ink: #2A1B00;
+  --c: #7B5CE0;
+  color-scheme: dark;
 }
-.hero{padding:.5rem .25rem 1.25rem}
-.foot{text-align:center;font-size:.95rem;margin-top:1.25rem}
-.foot a{color:var(--ink);font-weight:600}
 
-/* ---------- Buttons ---------- */
-.btn{
-  display:inline-flex;align-items:center;justify-content:center;
-  min-height:52px;padding:0 1.5rem;border-radius:999px;
-  border:2px solid var(--ink);background:var(--paper);color:var(--ink);
-  font:600 1.05rem/1 var(--body);cursor:pointer;text-decoration:none;
-  box-shadow:4px 4px 0 var(--ink);
-  transition:transform .12s,box-shadow .12s;
+:root[data-skin="garden"] {
+  --bg: #CDE8D8;
+  --ink: #12301F;
+  --paper: #F4FBF6;
+  --muted: #3F6350;
+  --a: #1F6B45;
+  --a-ink: #FFFFFF;
+  --b: #F4A6B7;
+  --b-ink: #12301F;
+  --c: #FFD866;
+  color-scheme: light;
 }
-.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
-.btn.primary{background:var(--a);color:var(--a-ink)}
-.btn.big{width:100%;min-height:60px;font-size:1.2rem}
-.btn.small{min-height:36px;padding:0 .9rem;font-size:.95rem;box-shadow:none}
-.linkbtn{
-  background:none;border:0;padding:.5rem;cursor:pointer;
-  color:var(--ink);font-weight:500;text-decoration:underline;text-underline-offset:3px;
-}
-.btn:focus-visible,.chip:focus-visible,.tile:focus-visible,.skin:focus-visible,
-.linkbtn:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
-  outline:3px solid var(--ink);outline-offset:3px;
-}
-.row{display:flex;flex-wrap:wrap;gap:.9rem;margin-top:1.5rem}
-.row .btn{flex:1 1 auto}
-.stack{display:grid;gap:1rem;justify-items:center;margin-top:1.75rem}
-#nobtn{position:relative;transition:transform .2s ease-out,box-shadow .12s}
 
-/* ---------- Form bits ---------- */
-.field{margin-bottom:1.25rem}
-fieldset{border:0;padding:0;margin:0 0 1.25rem;min-width:0}
-label,legend{display:block;font-weight:600;margin-bottom:.4rem;padding:0}
-input[type="text"],input[type="date"],textarea{
-  width:100%;background:var(--paper);color:var(--ink);
-  border:2px solid var(--ink);border-radius:12px;padding:.75rem .9rem;
-}
-textarea{resize:vertical;min-height:3.5rem}
-input::placeholder,textarea::placeholder{color:var(--muted);opacity:1}
-.check{display:flex;gap:.7rem;align-items:flex-start;font-weight:500;margin-bottom:1rem}
-.check input{width:22px;height:22px;margin:.1rem 0 0;accent-color:var(--a);flex:none}
-.error{color:var(--ink);font-weight:600;min-height:1.5rem;margin:.5rem 0 0}
-.error:not(:empty){background:var(--b);color:var(--b-ink);padding:.5rem .8rem;border-radius:10px}
+/* =========================================================================
+   2. BASE
+   Resets and defaults applied to plain HTML elements, before any
+   class-based styling.
+   ========================================================================= */
 
-.chips{display:flex;flex-wrap:wrap;gap:.5rem}
-.chip{
-  min-height:44px;padding:.65rem 1rem;border-radius:999px;
-  border:2px solid var(--ink);background:transparent;color:var(--ink);
-  font:500 1rem/1.1 var(--body);cursor:pointer;
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
 }
-.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.tiles{display:grid;gap:.75rem;margin-bottom:1.5rem}
-.tile{
-  text-align:left;padding:.9rem 1rem;border:2px solid var(--ink);border-radius:16px;
-  background:var(--paper);color:var(--ink);cursor:pointer;
-  box-shadow:3px 3px 0 var(--ink);
+
+html {
+  background: var(--bg);
+  scroll-padding-top: env(safe-area-inset-top, 0px);
 }
-.tile b{display:block;font:700 1.1rem/1.2 var(--display)}
-.tile span{color:var(--muted);font-size:.95rem}
-.tile[aria-pressed="true"]{background:var(--b);color:var(--b-ink)}
-.tile[aria-pressed="true"] span{color:var(--b-ink)}
-.skins{display:flex;flex-wrap:wrap;gap:.5rem}
-.skin{
-  display:inline-flex;align-items:center;gap:.5rem;min-height:44px;padding:.4rem .9rem .4rem .5rem;
-  border:2px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);
-  font-weight:500;cursor:pointer;
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.55 var(--body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
-.skin[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
-.dots{display:inline-flex}
-.dots i{width:16px;height:28px;display:block}
-.dots i:first-child{border-radius:14px 0 0 14px}
-.dots i:last-child{border-radius:0 14px 14px 0}
 
-/* ---------- Invitation ---------- */
-.invite .to{font-size:1.1rem;margin:0}
-.invite h1{font-size:clamp(2.6rem,11vw,4.25rem);margin:.5rem 0 .75rem}
-.invite .from{font-weight:600;margin:0}
-
-/* ---------- Plan ---------- */
-.progress{display:flex;gap:6px;margin-bottom:.6rem}
-.progress span{flex:1;height:8px;border-radius:4px;background:var(--ink);opacity:.2}
-.progress span.on{opacity:1}
-.stepno{color:var(--muted);font-size:.95rem;margin-bottom:1.25rem}
-.q{margin-bottom:.35rem}
-dl{margin:1rem 0 0}
-.sum{display:grid;grid-template-columns:7rem 1fr;gap:.25rem 1rem;padding:.7rem 0;border-bottom:1px dashed var(--muted)}
-.sum:last-child{border-bottom:0}
-.sum dt{font-weight:600}
-.sum dd{margin:0;overflow-wrap:anywhere}
-.linkbox{margin:.75rem 0 0}
-
-/* ---------- Bits ---------- */
-.banner{
-  display:flex;align-items:center;justify-content:space-between;gap:.75rem;
-  background:var(--ink);color:var(--paper);padding:.5rem .5rem .5rem 1.1rem;
-  border-radius:999px;margin-bottom:1rem;font-weight:500;font-size:.95rem;
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
 }
-.banner .btn{color:var(--ink);background:var(--paper);border-color:var(--paper)}
-.toast{
-  position:fixed;left:50%;bottom:calc(1.25rem + env(safe-area-inset-bottom,0px));z-index:5;
-  transform:translate(-50%,20px);opacity:0;pointer-events:none;
-  background:var(--ink);color:var(--paper);padding:.7rem 1.1rem;border-radius:999px;font-weight:500;
-  transition:opacity .2s,transform .2s;max-width:92vw;text-align:center;
+
+h1,
+h2 {
+  margin: 0;
 }
-.toast.show{opacity:1;transform:translate(-50%,0)}
 
-/* ---------- Extras ---------- */
-.ps{margin:.9rem 0 0;color:var(--muted)}
-.group{margin-top:1.75rem}
-.group h2{margin-bottom:.25rem}
-.chip.small{min-height:36px;padding:.4rem .8rem;font-size:.92rem}
-.ideas{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem}
-.reveal h1{font-size:clamp(2.4rem,10vw,3.8rem)}
+h1 {
+  font: 800 clamp(2.1rem, 8.5vw, 3.25rem) / 1.03 var(--display);
+  letter-spacing: -0.02em;
+  margin: 0.25rem 0 1rem;
+  text-wrap: balance;
+}
 
-@media (prefers-reduced-motion:reduce){
-  .shapes{animation:none}
-  .sh,.toast,#nobtn,.btn{transition:none}
+/* Every screen focuses its <h1> on render (see main.js), but we don't
+   want the browser's default focus ring showing on it. */
+h1:focus {
+  outline: none;
+}
+
+h2 {
+  font: 700 1.4rem/1.15 var(--display);
+  letter-spacing: -0.01em;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin: 0 0 1rem;
+}
+
+.lede {
+  font-size: 1.15rem;
+  max-width: 34ch;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.hint {
+  display: block;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 400;
+}
+
+/* =========================================================================
+   3. BACKGROUND SHAPES
+   Four flat "paper-cut" shapes sit fixed behind every screen and glide
+   to a new position whenever body[data-screen] changes (set in main.js).
+   ========================================================================= */
+
+.shapes {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  animation: shapesIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.sh {
+  position: absolute;
+  transition: transform 0.9s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.sh1 {
+  width: 72vmin;
+  height: 72vmin;
+  border-radius: 50%;
+  background: var(--b);
+  top: -24vmin;
+  right: -26vmin;
+}
+
+.sh2 {
+  width: 52vmin;
+  height: 52vmin;
+  bottom: -14vmin;
+  left: -16vmin;
+}
+
+.sh3 {
+  width: 40vmin;
+  height: 20vmin;
+  border-radius: 40vmin 40vmin 0 0;
+  background: var(--c);
+  bottom: 10vmin;
+  right: -8vmin;
+}
+
+.sh4 {
+  width: 24vmin;
+  height: 24vmin;
+  border-radius: 0 100% 0 100%;
+  background: var(--a);
+  top: 24vmin;
+  left: -8vmin;
+}
+
+/* Each screen (create / invite / plan / done) has its own target
+   position for the four shapes, so the background gently drifts
+   as the person moves through the site. */
+
+body[data-screen="invite"] .sh1 { transform: translate(-10vmin, 14vmin) scale(1.1); }
+body[data-screen="invite"] .sh2 { transform: translate(6vmin, -4vmin) rotate(25deg); }
+body[data-screen="invite"] .sh3 { transform: translate(-14vmin, -6vmin); }
+body[data-screen="invite"] .sh4 { transform: translate(10vmin, 8vmin) rotate(20deg); }
+
+body[data-screen="plan"] .sh1 { transform: translate(12vmin, 44vmin) scale(0.8); }
+body[data-screen="plan"] .sh2 { transform: translate(22vmin, -46vmin) rotate(-30deg) scale(0.8); }
+body[data-screen="plan"] .sh3 { transform: translate(-20vmin, -40vmin) rotate(-8deg); }
+body[data-screen="plan"] .sh4 { transform: translate(14vmin, 52vmin) rotate(-40deg); }
+
+body[data-screen="done"] .sh1 { transform: translate(-16vmin, 64vmin) scale(0.9); }
+body[data-screen="done"] .sh2 { transform: translate(30vmin, -8vmin) rotate(60deg) scale(1.1); }
+body[data-screen="done"] .sh3 { transform: translate(-30vmin, -30vmin); }
+body[data-screen="done"] .sh4 { transform: translate(4vmin, -6vmin) rotate(70deg) scale(1.3); }
+
+@keyframes shapesIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* =========================================================================
+   4. LAYOUT
+   The centered page wrapper, and the rounded "card" panels that hold
+   each screen's content.
+   ========================================================================= */
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3.5rem;
+}
+
+.card {
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 28px;
+  padding: 1.5rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.hero {
+  padding: 0.5rem 0.25rem 1.25rem;
+}
+
+.foot {
+  text-align: center;
+  font-size: 0.95rem;
+  margin-top: 1.25rem;
+}
+
+.foot a {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* =========================================================================
+   5. BUTTONS
+   The chunky, sticker-like buttons used everywhere, plus the "No"
+   button's dodge animation.
+   ========================================================================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 1.5rem;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 1.05rem/1 var(--body);
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 4px 4px 0 var(--ink);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+/* The "pressed sticker" effect: the button moves down into its own
+   shadow when clicked. */
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.btn.primary {
+  background: var(--a);
+  color: var(--a-ink);
+}
+
+.btn.big {
+  width: 100%;
+  min-height: 60px;
+  font-size: 1.2rem;
+}
+
+.btn.small {
+  min-height: 36px;
+  padding: 0 0.9rem;
+  font-size: 0.95rem;
+  box-shadow: none;
+}
+
+.linkbtn {
+  background: none;
+  border: 0;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* One shared focus ring for every interactive element, so keyboard
+   users always see where they are. */
+.btn:focus-visible,
+.chip:focus-visible,
+.tile:focus-visible,
+.skin:focus-visible,
+.linkbtn:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+}
+
+.row .btn {
+  flex: 1 1 auto;
+}
+
+.stack {
+  display: grid;
+  gap: 1rem;
+  justify-items: center;
+  margin-top: 1.75rem;
+}
+
+/* The "No" button's dodge is done by moving it with a transform
+   in main.js — this transition is what makes that move smooth. */
+#nobtn {
+  position: relative;
+  transition: transform 0.2s ease-out, box-shadow 0.12s;
+}
+
+/* =========================================================================
+   6. FORM FIELDS
+   Text inputs, checkboxes, and the inline error message on the
+   create screen.
+   ========================================================================= */
+
+.field {
+  margin-bottom: 1.25rem;
+}
+
+fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1.25rem;
+  min-width: 0;
+}
+
+label,
+legend {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  padding: 0;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="time"],
+textarea {
+  width: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 3.5rem;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.check {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  margin: 0.1rem 0 0;
+  accent-color: var(--a);
+  flex: none;
+}
+
+.error {
+  color: var(--ink);
+  font-weight: 600;
+  min-height: 1.5rem;
+  margin: 0.5rem 0 0;
+}
+
+/* Only show the yellow error background once there's actual text
+   in it — an empty .error stays invisible. */
+.error:not(:empty) {
+  background: var(--b);
+  color: var(--b-ink);
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+}
+
+/* =========================================================================
+   7. CHIPS AND TILES
+   The pill-shaped option buttons on the planner screens, the bigger
+   "vibe" tiles, and the color-look picker on the create screen.
+   ========================================================================= */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  border: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font: 500 1rem/1.1 var(--body);
+  cursor: pointer;
+}
+
+/* main.js toggles aria-pressed on each chip when it's selected. */
+.chip[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.tiles {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.tile {
+  text-align: left;
+  padding: 0.9rem 1rem;
+  border: 2px solid var(--ink);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.tile b {
+  display: block;
+  font: 700 1.1rem/1.2 var(--display);
+}
+
+.tile span {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.tile[aria-pressed="true"] {
+  background: var(--b);
+  color: var(--b-ink);
+}
+
+.tile[aria-pressed="true"] span {
+  color: var(--b-ink);
+}
+
+.skins {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.4rem 0.9rem 0.4rem 0.5rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.skin[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* The little three-color preview inside each "look" button. */
+.dots {
+  display: inline-flex;
+}
+
+.dots i {
+  width: 16px;
+  height: 28px;
+  display: block;
+}
+
+.dots i:first-child {
+  border-radius: 14px 0 0 14px;
+}
+
+.dots i:last-child {
+  border-radius: 0 14px 14px 0;
+}
+
+/* =========================================================================
+   8. INVITATION SCREEN
+   Text sizing specific to the invite question and the "yes" reveal.
+   ========================================================================= */
+
+.invite .to {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.invite h1 {
+  font-size: clamp(2.6rem, 11vw, 4.25rem);
+  margin: 0.5rem 0 0.75rem;
+}
+
+.invite .from {
+  font-weight: 600;
+  margin: 0;
+}
+
+/* The reveal screen's message runs a bit smaller than the main
+   invite question, since it's usually a full sentence. */
+.reveal h1 {
+  font-size: clamp(2.4rem, 10vw, 3.8rem);
+}
+
+/* The optional P.S. line shown under the invite. */
+.ps {
+  margin: 0.9rem 0 0;
+  color: var(--muted);
+}
+
+/* =========================================================================
+   9. PLANNER SCREEN
+   The step progress bar, the grouped sub-sections within a step, and
+   the final [label, value] summary list.
+   ========================================================================= */
+
+.progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 0.6rem;
+}
+
+.progress span {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--ink);
+  opacity: 0.2;
+}
+
+.progress span.on {
+  opacity: 1;
+}
+
+.stepno {
+  color: var(--muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+.q {
+  margin-bottom: 0.35rem;
+}
+
+/* A labeled sub-section within one planner step, e.g. "Drinks" and
+   "Dessert" both living on the same step. */
+.group {
+  margin-top: 1.75rem;
+}
+
+.group h2 {
+  margin-bottom: 0.25rem;
+}
+
+/* Smaller suggestion chips (P.S. / "after yes" ideas) that sit under
+   a text field rather than standing alone. */
+.chip.small {
+  min-height: 36px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.92rem;
+}
+
+.ideas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+dl {
+  margin: 1rem 0 0;
+}
+
+.sum {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.25rem 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px dashed var(--muted);
+}
+
+.sum:last-child {
+  border-bottom: 0;
+}
+
+.sum dt {
+  font-weight: 600;
+}
+
+.sum dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.linkbox {
+  margin: 0.75rem 0 0;
+}
+
+/* =========================================================================
+   10. SMALL PIECES
+   The "previewing what X will see" banner, and the bottom "copied"
+   toast notification.
+   ========================================================================= */
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.5rem 0.5rem 0.5rem 1.1rem;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.banner .btn {
+  color: var(--ink);
+  background: var(--paper);
+  border-color: var(--paper);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 5;
+  transform: translate(-50%, 20px);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.7rem 1.1rem;
+  border-radius: 999px;
+  font-weight: 500;
+  transition: opacity 0.2s, transform 0.2s;
+  max-width: 92vw;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* =========================================================================
+   11. MOTION PREFERENCES
+   Respect the OS-level "reduce motion" setting by turning off the
+   shape animation and button transitions entirely.
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .shapes {
+    animation: none;
+  }
+
+  .sh,
+  .toast,
+  #nobtn,
+  .btn {
+    transition: none;
+  }
 }
