@@ -263,6 +263,7 @@ legend {
 input[type="text"],
 input[type="date"],
 input[type="time"],
+
 textarea {
   width: 100%;
   background: var(--paper);
