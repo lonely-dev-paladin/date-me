@@ -1,8 +1,6 @@
 /* =========================================================================
-   Will you go on a date with me? — main.js
+   app.js
    -------------------------------------------------------------------------
-   No framework, no build step. Just:
-
      1. CONSTANTS       — fixed lists and text (food options, colors, etc.)
      2. STATE           — one object holding everything currently true
                            about the page (which screen, what's typed in)
@@ -11,17 +9,21 @@
      5. UI BUILDERS     — small reusable pieces of HTML (chips, tiles...)
      6. SCREENS         — one function per screen, returns that screen's
                            full HTML as a string, built from `state`
-     7. RENDER          — decides which screen to show and injects its
-                           HTML into the page
+     7. RENDER          — decides which screen to show and hands its
+                           HTML to the transition engine
      8. ACTIONS         — what happens when a button is clicked
-                           (name -> update state -> call render() again)
      9. EVENT LISTENERS — clicks / typing on the page are routed to
                            the functions above
     10. START           — reads the URL, sets initial state, renders once
 
-   The loop is always the same:
-     something happens -> update `state` -> render() -> page rebuilds
+   Visual work (photo backgrounds, screen transitions, staggered chip
+   reveals) lives in photos.js and transitions.js — this file only
+   decides WHAT to show, never HOW it animates in.
    ========================================================================= */
+
+import { photoBg } from './photos.js';
+import { mountScreen, switchScreen } from './transitions.js';
+
 (function () {
     'use strict';
 
@@ -32,7 +34,6 @@
        1. CONSTANTS
        ======================================================================= */
 
-    // The three color looks a person can pick when creating an invite.
     var SKINS = {
         lilac: { name: 'Lilac', dots: ['#DCD0FB', '#FFD866', '#B0124A'] },
         evening: { name: 'Evening', dots: ['#1B1030', '#F7C948', '#FFB4C8'] },
@@ -40,9 +41,12 @@
     };
 
     var DEFAULT_Q = 'Would you go on a date with me?';
-    var TOTAL_STEPS = 8; // how many steps are in the "plan the date" flow
+    var TOTAL_STEPS = 8;
 
-    // Option lists shown as chips on the planning screens.
+    // Which planner steps get a full-bleed photo background, and which
+    // context (see photos.js) each one uses.
+    var PHOTO_STEPS = { 0: 'food', 1: 'drinks', 3: 'places' };
+
     var FOOD = [
         'Filipino', 'Japanese', 'Korean', 'Italian', 'Chinese', 'Thai',
         'Steak and grill', 'Seafood', 'Burgers and pizza', 'Vegetarian',
@@ -77,7 +81,6 @@
     ];
     var GETTING = ['Meet there', 'Pick me up', 'Commute together'];
 
-    // [title, subtitle] pairs shown as bigger "tiles" for the date's vibe.
     var VIBES = [
         ['Simple and relaxed', 'Casual, comfy, no pressure'],
         ['Elegant', 'Dress up a little, get a nice table'],
@@ -86,9 +89,6 @@
         ['Playful', 'Games, laughs, and silly fun']
     ];
 
-    // Optional "flirty touch" text. FLIRT = closing line the invitee can
-    // pick for their reply. PS_IDEAS / YES_IDEAS = quick-fill suggestions
-    // for the asker's own optional messages.
     var FLIRT = [
         'Can\u2019t wait to see you.',
         'Fair warning: I\u2019m hard to impress. Good luck.',
@@ -111,8 +111,6 @@
 
     /* =======================================================================
        2. STATE
-       One object holds everything true about the page right now.
-       Nothing is read from anywhere else — every screen is built from this.
        ======================================================================= */
 
     var prefersDark =
@@ -120,38 +118,20 @@
         window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     var state = {
-        // Are we the person CREATING an invite, or the person ANSWERING one?
-        mode: 'create',
-
-        // Which screen is currently shown. One of:
-        // 'create' | 'invite' | 'reveal' | 'no' | 'maybe' | 'plan' | 'done'
-        screen: 'create',
-
-        // True while the asker is previewing what the invitee will see.
+        mode: 'create',       // 'create' | 'invite'
+        screen: 'create',     // see render() for the full list
         preview: false,
-
-        // Which step (0-based) of the 8-step planner we're on.
         step: 0,
 
-        // The invitation as the ASKER is currently filling it in.
         draft: {
-            a: '',                                  // asker's name
-            b: '',                                  // invitee's name
-            m: DEFAULT_Q,                           // the question itself
-            s: prefersDark ? 'evening' : 'lilac',   // color look
-            d: 0,                                   // 1 = "No" button dodges
-            t: 1,                                   // 1 = show "let me think" option
-            p: '',                                  // optional P.S. line
-            y: ''                                   // optional "after they say yes" message
+            a: '', b: '', m: DEFAULT_Q,
+            s: prefersDark ? 'evening' : 'lilac',
+            d: 0, t: 1, p: '', y: ''
         },
 
-        // The decoded invitation, once someone opens an invite link.
         invite: null,
-
-        // The generated invite link, shown after the asker clicks "Create".
         link: '',
 
-        // The invitee's answers while planning the date.
         ans: {
             food: [], avoid: '',
             drinks: [], dessert: [],
@@ -164,32 +144,23 @@
             flirt: '', flirtOwn: ''
         },
 
-        // The invitee's free-text reply on a No / Maybe answer.
         reply: ''
     };
 
     /* =======================================================================
        3. HELPERS
-       Small, general-purpose functions used all over the file.
        ======================================================================= */
 
-    // Escape text before dropping it into HTML, so a name like "Sam & Jo"
-    // (or something malicious) can't break the page.
     function esc(s) {
         return String(s).replace(/[&<>"']/g, function (c) {
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
         });
     }
 
-    // Pack the invitation into a compact string that can live inside a URL,
-    // e.g. "#i=eyJhIjoiQWxleCJ9". This is how the site works with no backend:
-    // the invitation IS the link.
     function encode(o) {
         return encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(o)))));
     }
 
-    // The reverse of encode(): read the invitation out of the current URL
-    // hash. Returns null if there's nothing there, or it's malformed.
     function decode(hash) {
         try {
             var m = hash.match(/^#i=(.+)$/);
@@ -217,7 +188,6 @@
         document.documentElement.setAttribute('data-skin', s);
     }
 
-    // Small "toast" message at the bottom of the screen, e.g. "Copied!".
     function toast(msg) {
         toastEl.textContent = msg;
         toastEl.classList.add('show');
@@ -227,7 +197,6 @@
         }, 2200);
     }
 
-    // Copy text to the clipboard, with a fallback for older browsers.
     function copy(text) {
         var done = function () { toast('Copied to your clipboard.'); };
 
@@ -254,13 +223,11 @@
         }
     }
 
-    // Use the device's native share sheet if there is one, otherwise
-    // just copy the text so the person can paste it themselves.
     function share(text, url) {
         if (navigator.share) {
             var data = url ? { text: text, url: url } : { text: text };
             navigator.share(data).catch(function (e) {
-                if (e && e.name === 'AbortError') return; // person cancelled, do nothing
+                if (e && e.name === 'AbortError') return;
                 copy(url ? text + ' ' + url : text);
             });
         } else {
@@ -268,7 +235,6 @@
         }
     }
 
-    // "2026-10-03" -> "Saturday, October 3"
     function fmtDay(v) {
         try {
             var d = new Date(v + 'T00:00:00');
@@ -278,7 +244,6 @@
         }
     }
 
-    // "18:30" -> "6:30 PM"
     function fmtTime(v) {
         try {
             var parts = v.split(':');
@@ -291,11 +256,8 @@
 
     /* =======================================================================
        4. PLAN + MESSAGE
-       Turns state.ans into the summary list and the final message text.
        ======================================================================= */
 
-    // Build the [label, value] rows shown on the summary screen, skipping
-    // anything the invitee left blank.
     function planLines() {
         var A = state.ans;
         var out = [];
@@ -325,13 +287,10 @@
         return out;
     }
 
-    // The invitee's own written line wins over the picked chip, if they
-    // wrote one.
     function flirtLine() {
         return state.ans.flirtOwn.trim() || state.ans.flirt;
     }
 
-    // The full "Yes!" message the invitee sends back to the asker.
     function yesMessage() {
         var inv = state.invite;
         var lines = planLines();
@@ -356,20 +315,19 @@
 
     /* =======================================================================
        5. UI BUILDERS
-       Small, reusable pieces of HTML shared across more than one screen.
        ======================================================================= */
 
-    // A row of pill-shaped option buttons ("chips") for one field in
-    // state.ans. mode is 'multi' (toggle on/off, any number) or 'single'
-    // (only one selected at a time).
-    function chips(key, list, mode) {
+    // variant: '' (default, ink-outlined) or 'glass' (for photo screens).
+    function chips(key, list, mode, variant) {
+        var extra = variant === 'glass' ? ' glass' : '';
+
         var buttons = list.map(function (value) {
             var isOn = mode === 'multi'
                 ? state.ans[key].indexOf(value) > -1
                 : state.ans[key] === value;
 
             return (
-                '<button type="button" class="chip" data-chip ' +
+                '<button type="button" class="chip' + extra + '" data-chip ' +
                 'data-key="' + key + '" data-mode="' + mode + '" data-val="' + esc(value) + '" ' +
                 'aria-pressed="' + isOn + '">' + esc(value) + '</button>'
             );
@@ -378,8 +336,6 @@
         return '<div class="chips" role="group">' + buttons + '</div>';
     }
 
-    // Small suggestion chips that fill a text field with a preset line
-    // when clicked (used for the P.S. / "after yes" fields).
     function ideaChips(field, list) {
         return list.map(function (text) {
             return (
@@ -389,7 +345,6 @@
         }).join('');
     }
 
-    // The bigger "vibe" tiles (title + subtitle), single-select.
     function tiles() {
         var buttons = VIBES.map(function (v) {
             var title = v[0], subtitle = v[1];
@@ -407,29 +362,27 @@
         return '<div class="tiles" role="group">' + buttons + '</div>';
     }
 
-    // The dot progress bar + "Step X of Y" label at the top of the planner.
-    function progress(i) {
+    // variant: '' or 'on-photo', to switch the dot/label colors.
+    function progress(i, variant) {
+        var extra = variant === 'on-photo' ? ' on-photo' : '';
         var dots = '';
         for (var n = 0; n < TOTAL_STEPS; n++) {
             dots += '<span class="' + (n <= i ? 'on' : '') + '"></span>';
         }
 
         return (
-            '<div class="progress" role="img" aria-label="Step ' + (i + 1) + ' of ' + TOTAL_STEPS + '">' +
+            '<div class="progress' + extra + '" role="img" aria-label="Step ' + (i + 1) + ' of ' + TOTAL_STEPS + '">' +
             dots +
             '</div>' +
-            '<p class="stepno">Step ' + (i + 1) + ' of ' + TOTAL_STEPS + '</p>'
+            '<p class="stepno' + extra + '">Step ' + (i + 1) + ' of ' + TOTAL_STEPS + '</p>'
         );
     }
 
-    // "Make your own invitation" link, shown at the bottom of every screen
-    // EXCEPT while the asker is previewing their own draft.
     function footer() {
         if (state.preview) return '';
         return '<p class="foot"><a href="#" data-act="own">Make your own invitation</a></p>';
     }
 
-    // The "Previewing what X will see" bar, shown only in preview mode.
     function banner() {
         if (!state.preview) return '';
         return (
@@ -442,11 +395,8 @@
 
     /* =======================================================================
        6. SCREENS
-       One function per screen. Each returns that screen's full HTML,
-       built entirely from `state`. render() decides which one to call.
        ======================================================================= */
 
-    // The asker's form: names, question, look, and optional flirty touches.
     function screenCreate() {
         var d = state.draft;
 
@@ -461,7 +411,6 @@
             );
         }).join('');
 
-        // The "here's your link" box only shows up once a link has been made.
         var result = '';
         if (state.link) {
             result =
@@ -548,28 +497,30 @@
         );
     }
 
-    // The invitation itself: the question, and the Yes / No / Maybe buttons.
+    // The invitation: now a full-bleed photo poster instead of a plain card.
     function screenInvite() {
         var inv = state.invite;
 
         return (
             banner() +
-            '<section class="card invite">' +
+            '<section class="photo-screen">' +
+            photoBg('invite') +
+            '<div class="photo-content">' +
             '<p class="to">Hi ' + esc(inv.b) + ',</p>' +
             '<h1>' + esc(inv.m) + '</h1>' +
             '<p class="from">From ' + esc(inv.a) + '</p>' +
             (inv.p ? '<p class="ps">' + esc(inv.p) + '</p>' : '') +
             '<div class="stack">' +
-            '<button type="button" class="btn primary big" data-act="yes">Yes</button>' +
-            '<button type="button" class="btn big" id="nobtn" data-act="no">No</button>' +
-            (inv.t ? '<button type="button" class="linkbtn" data-act="maybe">Let me think about it</button>' : '') +
+            '<button type="button" class="btn glass primary big" data-act="yes">Yes</button>' +
+            '<button type="button" class="btn glass big" id="nobtn" data-act="no">No</button>' +
+            (inv.t ? '<button type="button" class="linkbtn on-photo" data-act="maybe">Let me think about it</button>' : '') +
+            '</div>' +
             '</div>' +
             '</section>' +
             footer()
         );
     }
 
-    // Shown after a No or a Maybe: lets the invitee send a kind reply.
     function screenReply(kind) {
         var inv = state.invite;
         var isNo = kind === 'no';
@@ -608,49 +559,27 @@
         );
     }
 
-    // The 8-step "plan the date" flow. One `if` block per step, all
-    // sharing the same Back / Next footer.
+    // Steps 0 (food), 1 (drinks/dessert), and 3 (places) render as photo
+    // screens. The rest stay as quiet cards — a photo doesn't help a
+    // date picker or a text note.
     function screenPlan() {
         var i = state.step;
         var inv = state.invite;
         var A = state.ans;
-        var body = '';
         var pickHint = '<p class="muted">Pick as many as you like.</p>';
+        var photoContext = PHOTO_STEPS[i];
 
-        if (i === 0) {
-            body =
-                '<h1 class="q">What are you in the mood to eat?</h1>' +
-                '<p class="muted">You said yes. Now for the fun part. Pick as many as you like.</p>' +
-                chips('food', FOOD, 'multi') +
-                '<div class="field" style="margin-top:1.25rem">' +
-                '<label for="avoid">Anything you\u2019d rather avoid?</label>' +
-                '<input id="avoid" type="text" data-a="avoid" maxlength="120" ' +
-                'placeholder="Allergies, foods you dislike" value="' + esc(A.avoid) + '">' +
-                '</div>';
+        if (photoContext) return screenPlanPhoto(i, photoContext);
 
-        } else if (i === 1) {
-            body =
-                '<h1 class="q">Drinks and dessert?</h1>' + pickHint +
-                '<div class="group"><h2>What are we drinking?</h2>' + chips('drinks', DRINKS, 'multi') + '</div>' +
-                '<div class="group"><h2>And for dessert?</h2>' + chips('dessert', DESSERTS, 'multi') + '</div>';
+        var body = '';
 
-        } else if (i === 2) {
+        if (i === 2) {
             body =
                 '<h1 class="q">What kind of date sounds right?</h1>' +
                 '<p class="muted">Choose the feeling you\u2019d like.</p>' +
                 tiles() +
                 '<h2>What\u2019s the budget feeling?</h2>' +
                 chips('budget', BUDGET, 'single');
-
-        } else if (i === 3) {
-            body =
-                '<h1 class="q">Where would you like to go?</h1>' + pickHint +
-                chips('places', PLACES, 'multi') +
-                '<div class="field" style="margin-top:1.25rem">' +
-                '<label for="ideas">Have a specific place in mind?</label>' +
-                '<input id="ideas" type="text" data-a="ideas" maxlength="120" ' +
-                'placeholder="A caf\u00e9 you\u2019ve been wanting to try" value="' + esc(A.ideas) + '">' +
-                '</div>';
 
         } else if (i === 4) {
             body =
@@ -715,32 +644,89 @@
         );
     }
 
-    // The optional "after they say Yes" reveal, before the planner starts.
-    function screenReveal() {
-        var inv = state.invite;
+    // The photo variant of a planner step: food, drinks/dessert, or places.
+    function screenPlanPhoto(i, context) {
+        var A = state.ans;
+        var isLastStep = i === TOTAL_STEPS - 1;
+        var heading, sub, body;
+
+        if (context === 'food') {
+            heading = 'What are you in the mood to eat?';
+            sub = 'You said yes. Now for the fun part. Pick as many as you like.';
+            body =
+                chips('food', FOOD, 'multi', 'glass') +
+                '<div class="field" style="margin-top:1.25rem">' +
+                '<label for="avoid">Anything you\u2019d rather avoid?</label>' +
+                '<input id="avoid" type="text" data-a="avoid" maxlength="120" ' +
+                'placeholder="Allergies, foods you dislike" value="' + esc(A.avoid) + '">' +
+                '</div>';
+
+        } else if (context === 'drinks') {
+            heading = 'Drinks and dessert?';
+            sub = 'Pick as many as you like.';
+            body =
+                '<h2>What are we drinking?</h2>' + chips('drinks', DRINKS, 'multi', 'glass') +
+                '<h2 style="margin-top:1.5rem">And for dessert?</h2>' + chips('dessert', DESSERTS, 'multi', 'glass');
+
+        } else {
+            heading = 'Where would you like to go?';
+            sub = 'Pick as many as you like.';
+            body =
+                chips('places', PLACES, 'multi', 'glass') +
+                '<div class="field" style="margin-top:1.25rem">' +
+                '<label for="ideas">Have a specific place in mind?</label>' +
+                '<input id="ideas" type="text" data-a="ideas" maxlength="120" ' +
+                'placeholder="A caf\u00e9 you\u2019ve been wanting to try" value="' + esc(A.ideas) + '">' +
+                '</div>';
+        }
 
         return (
             banner() +
-            '<section class="card invite reveal">' +
-            '<p class="to">' + esc(inv.a) + ' says:</p>' +
-            '<h1>' + esc(inv.y) + '</h1>' +
-            '<div class="stack">' +
-            '<button type="button" class="btn primary big" data-act="startplan">Plan our date</button>' +
+            '<section class="photo-screen">' +
+            photoBg(context) +
+            '<div class="photo-content">' +
+            progress(i, 'on-photo') +
+            '<h1 class="q">' + heading + '</h1>' +
+            '<p class="lede">' + sub + '</p>' +
+            body +
+            '<div class="row">' +
+            '<button type="button" class="btn glass" data-act="prev">Back</button>' +
+            '<button type="button" class="btn glass primary" data-act="next">' +
+            (isLastStep ? 'See my plan' : 'Next') +
+            '</button>' +
+            '</div>' +
             '</div>' +
             '</section>' +
             footer()
         );
     }
 
-    // The final summary screen: what the invitee picked, and buttons to
-    // send it all back to the asker.
+    function screenReveal() {
+        var inv = state.invite;
+
+        return (
+            banner() +
+            '<section class="photo-screen">' +
+            photoBg('reveal') +
+            '<div class="photo-content">' +
+            '<p class="to">' + esc(inv.a) + ' says:</p>' +
+            '<h1>' + esc(inv.y) + '</h1>' +
+            '<div class="stack">' +
+            '<button type="button" class="btn glass primary big" data-act="startplan">Plan our date</button>' +
+            '</div>' +
+            '</div>' +
+            '</section>' +
+            footer()
+        );
+    }
+
     function screenDone() {
         var inv = state.invite;
         var lines = planLines();
         var msg = yesMessage();
 
         var rows = lines.length
-            ? '<dl>' + lines.map(function (row) {
+            ? '<dl class="dl-sum">' + lines.map(function (row) {
                 return '<div class="sum"><dt>' + esc(row[0]) + '</dt><dd>' + esc(row[1]) + '</dd></div>';
             }).join('') + '</dl>'
             : '<p class="muted">You didn\u2019t pick any details, so ' + esc(inv.a) + ' will get a simple yes.</p>';
@@ -768,22 +754,38 @@
 
     /* =======================================================================
        7. RENDER
-       Looks at state.screen, calls the matching screen function, and
-       drops the resulting HTML into the page.
+       Decides which screen to show, sets the body's background-shape
+       state, and hands the HTML to the transition engine rather than
+       writing to innerHTML directly.
        ======================================================================= */
+
+    function isPhotoScreen(s, i) {
+        return s === 'invite' || s === 'reveal' || (s === 'plan' && PHOTO_STEPS[i] !== undefined);
+    }
+
+    function afterSwap() {
+        document.title = state.mode === 'invite'
+            ? state.invite.a + ' has a question for you'
+            : 'Ask someone on a date';
+
+        var heading = app.querySelector('h1');
+        if (heading) {
+            heading.setAttribute('tabindex', '-1');
+            heading.focus({ preventScroll: true });
+        }
+        window.scrollTo(0, 0);
+
+        dodges = 0;
+    }
 
     function render() {
         var s = state.screen;
+        var photoNow = isPhotoScreen(s, state.step);
 
-        // Which set of background shapes to animate to. 'reveal', 'no' and
-        // 'maybe' all use the same shape layout as the invite screen.
-        var shapeKey;
-        if (s === 'create') shapeKey = 'create';
-        else if (s === 'plan') shapeKey = 'plan';
-        else if (s === 'done') shapeKey = 'done';
-        else shapeKey = 'invite';
+        // Background shapes only show behind non-photo screens.
+        document.body.setAttribute('data-shapes', photoNow ? 'off' : 'on');
+        document.body.setAttribute('data-screen', s === 'done' ? 'done' : 'form');
 
-        document.body.setAttribute('data-screen', shapeKey);
         setSkin(state.mode === 'invite' ? state.invite.s : state.draft.s);
 
         var html;
@@ -794,34 +796,21 @@
         else if (s === 'plan') html = screenPlan();
         else html = screenDone();
 
-        app.innerHTML = html;
-
-        document.title = state.mode === 'invite'
-            ? state.invite.a + ' has a question for you'
-            : 'Ask someone on a date';
-
-        // Move keyboard focus to the new heading, for accessibility, and
-        // scroll back to the top of the page.
-        var heading = app.querySelector('h1');
-        if (heading) {
-            heading.setAttribute('tabindex', '-1');
-            heading.focus({ preventScroll: true });
+        if (app.childElementCount === 0) {
+            mountScreen(app, html);
+            afterSwap();
+        } else {
+            switchScreen(app, html, afterSwap);
         }
-        window.scrollTo(0, 0);
-
-        dodges = 0; // reset the "No button" dodge counter on every new screen
     }
 
     /* =======================================================================
        8. ACTIONS
-       What happens when a button is clicked. Each case updates `state`
-       and then calls render() to redraw the page from it.
        ======================================================================= */
 
     var dodges = 0;
     var lastDodge = 0;
 
-    // Nudge the No button to a random nearby spot.
     function dodge(btn) {
         dodges++;
         lastDodge = Date.now();
@@ -830,13 +819,10 @@
         btn.style.transform = 'translate(' + x + 'px,' + y + 'px)';
     }
 
-    // Only dodge if the asker turned it on, and only for the first few
-    // tries — a real "No" always has to work eventually.
     function dodgeOn() {
         return state.invite && state.invite.d && dodges < 5;
     }
 
-    // Both names are required before an invite can be created or previewed.
     function validateDraft() {
         var d = state.draft;
         var err = document.getElementById('err');
@@ -852,8 +838,6 @@
         return true;
     }
 
-    // Turn the (mutable) draft into the small, fixed shape that gets
-    // encoded into the link.
     function draftToInvite() {
         var d = state.draft;
         return {
@@ -911,7 +895,6 @@
                 break;
 
             case 'yes':
-                // Show the optional "after yes" reveal first, if the asker set one.
                 state.screen = inv.y ? 'reveal' : 'plan';
                 state.step = 0;
                 render();
@@ -924,8 +907,6 @@
                 break;
 
             case 'no':
-                // A real click has ev.detail > 0 (keyboard "click" is 0),
-                // so keyboard users never get stuck dodging the button.
                 if (dodgeOn() && ev && ev.detail !== 0) {
                     dodge(el);
                     return;
@@ -985,7 +966,6 @@
                 break;
 
             case 'own':
-                // Clear the invitation out of the URL and start fresh as an asker.
                 try {
                     history.replaceState(null, '', location.pathname + location.search);
                 } catch (e) {
@@ -998,13 +978,10 @@
 
     /* =======================================================================
        9. EVENT LISTENERS
-       One listener per event type on the whole document. Buttons are
-       matched by their data-* attributes rather than individual handlers.
        ======================================================================= */
 
     document.addEventListener('click', function (e) {
 
-        // Option chips (food, places, vibe tiles, etc.)
         var chip = e.target.closest('[data-chip]');
         if (chip) {
             var key = chip.dataset.key;
@@ -1025,7 +1002,6 @@
             return;
         }
 
-        // Suggestion chips that fill a text field (P.S. / "after yes" ideas).
         var fill = e.target.closest('button[data-fill]');
         if (fill) {
             var field = fill.dataset.fill;
@@ -1038,7 +1014,6 @@
             return;
         }
 
-        // Color-look buttons on the create screen.
         var skin = e.target.closest('button.skin');
         if (skin) {
             state.draft.s = skin.dataset.skin;
@@ -1049,7 +1024,6 @@
             return;
         }
 
-        // Everything else: buttons with a data-act, routed to act().
         var actionEl = e.target.closest('[data-act]');
         if (actionEl) {
             if (actionEl.tagName === 'A') e.preventDefault();
@@ -1057,7 +1031,6 @@
         }
     });
 
-    // Mouse-only: make the No button dodge on hover too, not just on click.
     document.addEventListener('pointerover', function (e) {
         var btn = e.target.closest && e.target.closest('#nobtn');
         if (btn && e.pointerType === 'mouse' && dodgeOn() && Date.now() - lastDodge > 250) {
@@ -1065,40 +1038,30 @@
         }
     });
 
-    // Typing into any text input / textarea updates the matching bit of state.
     document.addEventListener('input', function (e) {
         var t = e.target;
 
         if (t.dataset.f) {
-            // A field on the create screen (state.draft).
             state.draft[t.dataset.f] = t.type === 'checkbox' ? (t.checked ? 1 : 0) : t.value;
-
         } else if (t.dataset.a) {
-            // A field on a planner step (state.ans).
             state.ans[t.dataset.a] = t.value;
-
         } else if (t.dataset.r !== undefined) {
-            // The No / Maybe reply textarea.
             state.reply = t.value;
             var wa = document.getElementById('wa');
             if (wa) wa.href = waHref(state.reply);
         }
     });
 
-    // Select the whole invite link when it gets focus, so it's easy to copy.
     document.addEventListener('focusin', function (e) {
         if (e.target.id === 'linkbox') e.target.select();
     });
 
-    // Re-run init() whenever the URL hash changes, e.g. after "own" clears it.
     window.addEventListener('hashchange', function () {
         init();
     });
 
     /* =======================================================================
        10. START
-       Read the URL once, decide whether we're an asker or an invitee,
-       and render the first screen.
        ======================================================================= */
 
     function init() {

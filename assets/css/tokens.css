@@ -1,0 +1,137 @@
+/* =========================================================================
+   tokens.css
+   -------------------------------------------------------------------------
+   Every color, font, spacing, and shadow value used anywhere in the site
+   lives here as a CSS variable. Nothing else in the codebase should
+   write a raw hex color or px value for these — change the look of the
+   whole site by editing this one file.
+
+     1. COLOR — the default palette, dark mode, and the three
+                 "look" choices (lilac / evening / garden)
+     2. TYPE  — the two typefaces and their sizes
+     3. SPACE — the spacing and radius scale
+     4. MOTION — shared easing curves and durations
+   ========================================================================= */
+
+/* =========================================================================
+   1. COLOR
+   ========================================================================= */
+
+:root {
+  --ink: #22143A;       /* primary text, borders */
+  --paper: #FBF8FF;     /* card backgrounds */
+  --bg: #DCD0FB;        /* page background */
+  --muted: #5B4B78;     /* secondary text */
+
+  --a: #B0124A;         /* primary action color */
+  --a-ink: #FFFFFF;      /* text on top of --a */
+  --b: #FFD866;          /* secondary accent */
+  --b-ink: #22143A;      /* text on top of --b */
+  --c: #7FD6B0;           /* tertiary accent */
+
+  /* Champagne gold: a new premium accent, used sparingly for the
+     progress dots and small captions on photo screens. */
+  --gold: #C9A15A;
+  --gold-soft: #E9D9B4;
+
+  --display: 'Bricolage Grotesque', ui-rounded, 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1B1030;
+    --ink: #F5EDFF;
+    --paper: #2A1B47;
+    --muted: #BBA9DD;
+    --a: #FFB4C8;
+    --a-ink: #2A0F1E;
+    --b: #F7C948;
+    --b-ink: #2A1B00;
+    --c: #7B5CE0;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1B1030;
+  --ink: #F5EDFF;
+  --paper: #2A1B47;
+  --muted: #BBA9DD;
+  --a: #FFB4C8;
+  --a-ink: #2A0F1E;
+  --b: #F7C948;
+  --b-ink: #2A1B00;
+  --c: #7B5CE0;
+  color-scheme: dark;
+}
+
+/* Invitation looks, chosen by the person sending the invite.
+   app.js sets data-skin on <html> to switch between these. */
+
+:root[data-skin="lilac"] {
+  --bg: #DCD0FB; --ink: #22143A; --paper: #FBF8FF; --muted: #5B4B78;
+  --a: #B0124A; --a-ink: #FFFFFF; --b: #FFD866; --b-ink: #22143A; --c: #7FD6B0;
+  color-scheme: light;
+}
+
+:root[data-skin="evening"] {
+  --bg: #1B1030; --ink: #F5EDFF; --paper: #2A1B47; --muted: #BBA9DD;
+  --a: #FFB4C8; --a-ink: #2A0F1E; --b: #F7C948; --b-ink: #2A1B00; --c: #7B5CE0;
+  color-scheme: dark;
+}
+
+:root[data-skin="garden"] {
+  --bg: #CDE8D8; --ink: #12301F; --paper: #F4FBF6; --muted: #3F6350;
+  --a: #1F6B45; --a-ink: #FFFFFF; --b: #F4A6B7; --b-ink: #12301F; --c: #FFD866;
+  color-scheme: light;
+}
+
+/* =========================================================================
+   2. TYPE
+   ========================================================================= */
+
+:root {
+  --fs-display-lg: clamp(2.6rem, 9vw, 4.5rem);
+  --fs-display-md: clamp(2.1rem, 7vw, 3.1rem);
+  --fs-display-sm: clamp(1.5rem, 5vw, 1.9rem);
+  --fs-body-lg: 1.15rem;
+  --fs-body: 1.0625rem;
+  --fs-body-sm: 0.92rem;
+}
+
+/* =========================================================================
+   3. SPACE
+   A small, consistent scale rather than one-off pixel values.
+   ========================================================================= */
+
+:root {
+  --sp-1: 0.5rem;
+  --sp-2: 0.75rem;
+  --sp-3: 1rem;
+  --sp-4: 1.5rem;
+  --sp-5: 2rem;
+  --sp-6: 3rem;
+
+  --radius-card: 28px;
+  --radius-pill: 999px;
+  --radius-field: 12px;
+}
+
+/* =========================================================================
+   4. MOTION
+   One shared easing curve for the whole site, so every transition —
+   screen changes, buttons, chips — feels like it belongs together.
+   ========================================================================= */
+
+:root {
+  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.18s;
+  --dur-normal: 0.42s;
+  --dur-slow: 0.7s;
+}

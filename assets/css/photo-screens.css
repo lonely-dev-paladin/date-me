@@ -1,0 +1,165 @@
+/* =========================================================================
+   photo-screens.css
+   -------------------------------------------------------------------------
+   The editorial, full-bleed photo layout used for the invite, the
+   reveal, and the food / drinks / places planner steps.
+
+     1. PLACEHOLDER PHOTOS — a themed gradient stands in for a real
+                              photo until one is added (see the note
+                              at the top of js/photos.js)
+     2. PHOTO SCREEN       — the full-bleed frame, dark gradient
+                              overlay, and content positioning
+     3. CAPTION            — the small "photo of ___ here" label,
+                              only visible while a placeholder is showing
+   ========================================================================= */
+
+/* =========================================================================
+   1. PLACEHOLDER PHOTOS
+   Each context gets its own custom property, defaulting to nothing.
+   To use a real photo, set the matching variable — for example, in
+   your own small CSS rule:
+
+     :root { --photo-food: url('images/food.jpg'); }
+
+   The gradient underneath stays as a fallback if the image is slow
+   to load or missing, so the layout never breaks.
+   ========================================================================= */
+
+:root {
+  --photo-invite: url('../images/1.jpg');
+  --photo-reveal: url('../images/2.jpg');
+  --photo-food:   url('../images/3.jpg');
+  --photo-drinks: url('../images/4.jpg');
+  --photo-places: url('../images/5.jpg');
+}
+
+.photo-bg[data-photo="invite"] {
+  background-image: var(--photo-invite), linear-gradient(155deg, #6E2A55 0%, #B0124A 45%, #E8955C 100%);
+}
+
+.photo-bg[data-photo="reveal"] {
+  background-image: var(--photo-reveal), linear-gradient(155deg, #241143 0%, #6E2A55 55%, #C9A15A 100%);
+}
+
+.photo-bg[data-photo="food"] {
+  background-image: var(--photo-food), linear-gradient(155deg, #7A2E20 0%, #C9622B 55%, #E8B84B 100%);
+}
+
+.photo-bg[data-photo="drinks"] {
+  background-image: var(--photo-drinks), linear-gradient(155deg, #1E3A4C 0%, #2C6E7F 55%, #7FD6B0 100%);
+}
+
+.photo-bg[data-photo="places"] {
+  background-image: var(--photo-places), linear-gradient(155deg, #241143 0%, #5B3B8C 55%, #B0124A 100%);
+}
+
+/* =========================================================================
+   2. PHOTO SCREEN
+   A full-bleed frame with a dark gradient rising from the bottom so
+   white text always stays readable over any photo.
+   ========================================================================= */
+
+.photo-screen {
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  margin-bottom: var(--sp-3);
+  border: 2px solid var(--ink);
+
+  /* Tall enough to feel cinematic, capped so it never eats the
+     whole viewport on short phones. */
+  min-height: min(78vh, 640px);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.photo-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  z-index: 0;
+}
+
+/* The dark-to-clear gradient that content sits on top of. Separate
+   from .photo-bg so a real photo and the overlay can transition
+   independently later if needed. */
+.photo-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(10, 5, 15, 0.88) 0%,
+    rgba(10, 5, 15, 0.55) 38%,
+    rgba(10, 5, 15, 0.05) 68%,
+    rgba(10, 5, 15, 0) 100%
+  );
+}
+
+.photo-content {
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+}
+
+.photo-content .to {
+  font-size: 1.1rem;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.photo-content h1 {
+  font-size: var(--fs-display-lg);
+  margin: 0.4rem 0 0.6rem;
+  color: #fff;
+}
+
+.photo-content .from {
+  font-weight: 600;
+  margin: 0 0 1.25rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.photo-content .ps {
+  margin: -0.75rem 0 1.25rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.photo-content .lede {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* =========================================================================
+   3. CAPTION
+   A small, deliberately understated label so a placeholder gradient
+   still reads as "designed," not "broken" or "missing."
+   ========================================================================= */
+
+.photo-caption {
+  position: absolute;
+  z-index: 2;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: rgba(10, 5, 15, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.78rem;
+  font-weight: 500;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.photo-caption svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}

@@ -1,0 +1,108 @@
+/* =========================================================================
+   transitions.css
+   -------------------------------------------------------------------------
+   The animation vocabulary for the whole site. js/transitions.js adds
+   and removes these classes — nothing here runs on its own.
+
+     1. SCREEN TRANSITION — the crossfade + lift used every time the
+                             app moves from one screen to the next
+     2. STAGGERED REVEAL  — chips and option buttons entering one
+                             after another, not all at once
+     3. BACKGROUND SHAPES — the soft drifting shapes behind non-photo
+                             screens (create, done, form steps)
+   ========================================================================= */
+
+/* =========================================================================
+   1. SCREEN TRANSITION
+   Exactly one moment of motion per screen change: the outgoing screen
+   settles down and fades, then the incoming screen rises and fades in.
+   transitions.js applies .screen-exit before removing the old content,
+   then .screen-enter on the new content.
+   ========================================================================= */
+
+.screen-exit {
+  animation: screenExit var(--dur-fast) var(--ease-premium) both;
+}
+
+.screen-enter {
+  animation: screenEnter var(--dur-slow) var(--ease-premium) both;
+}
+
+@keyframes screenExit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-8px) scale(0.99); }
+}
+
+@keyframes screenEnter {
+  from { opacity: 0; transform: translateY(18px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* =========================================================================
+   2. STAGGERED REVEAL
+   Any element marked data-stagger gets this animation, with its delay
+   set by transitions.js from its position in the list (--stagger-i).
+   ========================================================================= */
+
+[data-stagger] {
+  animation: staggerIn var(--dur-normal) var(--ease-premium) both;
+  animation-delay: calc(var(--stagger-i, 0) * 45ms + 120ms);
+}
+
+@keyframes staggerIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================================
+   3. BACKGROUND SHAPES
+   Four flat shapes, fixed behind non-photo screens only. Photo screens
+   don't use these — the photo itself is the visual interest.
+   ========================================================================= */
+
+.shapes {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-premium);
+}
+
+body[data-shapes="on"] .shapes {
+  opacity: 1;
+}
+
+.sh {
+  position: absolute;
+  transition: transform var(--dur-slow) var(--ease-premium);
+}
+
+.sh1 { width: 72vmin; height: 72vmin; border-radius: 50%; background: var(--b); top: -24vmin; right: -26vmin; }
+.sh2 { width: 52vmin; height: 52vmin; bottom: -14vmin; left: -16vmin; }
+.sh3 { width: 40vmin; height: 20vmin; border-radius: 40vmin 40vmin 0 0; background: var(--c); bottom: 10vmin; right: -8vmin; }
+.sh4 { width: 24vmin; height: 24vmin; border-radius: 0 100% 0 100%; background: var(--a); top: 24vmin; left: -8vmin; }
+
+body[data-screen="form"] .sh1 { transform: translate(-10vmin, 14vmin) scale(1.1); }
+body[data-screen="form"] .sh2 { transform: translate(6vmin, -4vmin) rotate(25deg); }
+body[data-screen="form"] .sh3 { transform: translate(-14vmin, -6vmin); }
+body[data-screen="form"] .sh4 { transform: translate(10vmin, 8vmin) rotate(20deg); }
+
+body[data-screen="done"] .sh1 { transform: translate(-16vmin, 64vmin) scale(0.9); }
+body[data-screen="done"] .sh2 { transform: translate(30vmin, -8vmin) rotate(60deg) scale(1.1); }
+body[data-screen="done"] .sh3 { transform: translate(-30vmin, -30vmin); }
+body[data-screen="done"] .sh4 { transform: translate(4vmin, -6vmin) rotate(70deg) scale(1.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-exit,
+  .screen-enter,
+  [data-stagger] {
+    animation: none !important;
+  }
+
+  .sh,
+  .shapes {
+    transition: none;
+  }
+}
