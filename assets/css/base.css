@@ -183,6 +183,14 @@ p {
   color: #241705;
 }
 
+/* The sticker button's :active effect (nudging into its own shadow)
+   doesn't work without a shadow, so glass buttons get a soft scale
+   press instead. */
+.btn.glass:active {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
 .linkbtn {
   background: none;
   border: 0;
@@ -263,7 +271,6 @@ legend {
 input[type="text"],
 input[type="date"],
 input[type="time"],
-
 textarea {
   width: 100%;
   background: var(--paper);
@@ -275,6 +282,7 @@ textarea {
 
 textarea {
   resize: none;
+  overflow: hidden;
   min-height: 3.5rem;
 }
 
@@ -347,12 +355,14 @@ textarea::placeholder {
 }
 
 /* Chips shown over a photo: light glass instead of an ink outline. */
+/* No backdrop-filter here on purpose: a photo step can show a dozen
+   of these at once, and a live blur on each one is a real performance
+   cost. A solid semi-opaque fill reads almost the same and costs
+   nothing to render. */
 .chip.glass {
   border-color: rgba(255, 255, 255, 0.55);
-  background: rgba(20, 12, 30, 0.35);
+  background: rgba(20, 12, 30, 0.55);
   color: #fff;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .chip.glass[aria-pressed="true"] {
@@ -535,6 +545,7 @@ textarea::placeholder {
   border-radius: 4px;
   background: var(--gold);
   opacity: 0.25;
+  transition: opacity var(--dur-normal) var(--ease-premium);
 }
 
 .progress span.on {
@@ -543,6 +554,12 @@ textarea::placeholder {
 
 .progress.on-photo span {
   background: #fff;
+}
+
+/* Keeps the dots clear of the placeholder caption in the top-right
+   corner of a photo screen. */
+.progress.on-photo {
+  padding-right: 132px;
 }
 
 .stepno {

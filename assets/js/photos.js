@@ -26,7 +26,12 @@ var PHOTO_LABELS = {
     reveal: 'reveal photo',
     food: 'food photo',
     drinks: 'drinks photo',
-    places: 'place photo'
+    places: 'place photo',
+    vibe: 'vibe photo',
+    after: 'after-date photo',
+    details: 'outfit photo',
+    when: 'evening photo',
+    note: 'candlelight photo'
 };
 
 // A small camera icon used in the placeholder caption.

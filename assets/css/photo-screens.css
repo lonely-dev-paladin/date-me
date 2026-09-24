@@ -31,6 +31,11 @@
   --photo-food:   url('../images/3.jpg');
   --photo-drinks: url('../images/4.jpg');
   --photo-places: url('../images/5.jpg');
+  --photo-vibe: url('../images/6.jpg');
+  --photo-after: url('../images/7.jpg');
+  --photo-details: url('../images/8.jpg');
+  --photo-when: url('../images/9.jpg');
+  --photo-note: url('../images/9.jpg');
 }
 
 .photo-bg[data-photo="invite"] {
@@ -51,6 +56,26 @@
 
 .photo-bg[data-photo="places"] {
   background-image: var(--photo-places), linear-gradient(155deg, #241143 0%, #5B3B8C 55%, #B0124A 100%);
+}
+
+.photo-bg[data-photo="vibe"] {
+  background-image: var(--photo-vibe), linear-gradient(155deg, #3B1150 0%, #A23B7C 55%, #FFB4C8 100%);
+}
+
+.photo-bg[data-photo="after"] {
+  background-image: var(--photo-after), linear-gradient(155deg, #0B1030 0%, #26205C 55%, #7B5CE0 100%);
+}
+
+.photo-bg[data-photo="details"] {
+  background-image: var(--photo-details), linear-gradient(155deg, #171018 0%, #3D2A1F 55%, #C9A15A 100%);
+}
+
+.photo-bg[data-photo="when"] {
+  background-image: var(--photo-when), linear-gradient(155deg, #16213A 0%, #3E5C76 55%, #F2C572 100%);
+}
+
+.photo-bg[data-photo="note"] {
+  background-image: var(--photo-note), linear-gradient(155deg, #2B140A 0%, #6E3423 55%, #F2A65A 100%);
 }
 
 /* =========================================================================
@@ -131,6 +156,53 @@
 
 .photo-content .lede {
   color: rgba(255, 255, 255, 0.85);
+}
+
+/* h1 and body text inherit white from .photo-content automatically —
+   these three are the only elements that set their own darker color
+   elsewhere in base.css, so they need an explicit override here. */
+.photo-content h2 {
+  color: #fff;
+}
+
+.photo-content .muted {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.photo-content .hint {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* A frosted panel for form fields that need to sit on top of a photo
+   (the date/time step, the closing note) — plain text and inputs are
+   hard to read directly over a busy image, so these get a contained
+   backing instead. Only one panel per screen, so the blur is cheap. */
+.glass-panel {
+  background: rgba(20, 12, 30, 0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  padding: var(--sp-4);
+  margin-top: var(--sp-3);
+}
+
+.glass-panel label {
+  color: #fff;
+}
+
+.glass-panel input[type="text"],
+.glass-panel input[type="date"],
+.glass-panel input[type="time"],
+.glass-panel textarea {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.glass-panel input::placeholder,
+.glass-panel textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* =========================================================================

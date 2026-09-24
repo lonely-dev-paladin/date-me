@@ -45,7 +45,10 @@ import { mountScreen, switchScreen } from './transitions.js';
 
     // Which planner steps get a full-bleed photo background, and which
     // context (see photos.js) each one uses.
-    var PHOTO_STEPS = { 0: 'food', 1: 'drinks', 3: 'places' };
+    var PHOTO_STEPS = {
+        0: 'food', 1: 'drinks', 2: 'vibe', 3: 'places',
+        4: 'after', 5: 'details', 6: 'when', 7: 'note'
+    };
 
     var FOOD = [
         'Filipino', 'Japanese', 'Korean', 'Italian', 'Chinese', 'Thai',
@@ -186,6 +189,15 @@ import { mountScreen, switchScreen } from './transitions.js';
 
     function setSkin(s) {
         document.documentElement.setAttribute('data-skin', s);
+    }
+
+    // Grows a textarea to fit whatever's typed in it, instead of
+    // scrolling or letting the person drag-resize it by hand.
+    // Resetting height to 'auto' first is what lets scrollHeight shrink
+    // back down again after text is deleted, not just grow.
+    function autoGrow(el) {
+        el.style.height = 'auto';
+        el.style.height = el.scrollHeight + 'px';
     }
 
     function toast(msg) {
@@ -559,95 +571,17 @@ import { mountScreen, switchScreen } from './transitions.js';
         );
     }
 
-    // Steps 0 (food), 1 (drinks/dessert), and 3 (places) render as photo
-    // screens. The rest stay as quiet cards — a photo doesn't help a
-    // date picker or a text note.
+    // Every planner step is a full-bleed photo screen — see PHOTO_STEPS
+    // above for which context each step number uses.
     function screenPlan() {
-        var i = state.step;
-        var inv = state.invite;
-        var A = state.ans;
-        var pickHint = '<p class="muted">Pick as many as you like.</p>';
-        var photoContext = PHOTO_STEPS[i];
-
-        if (photoContext) return screenPlanPhoto(i, photoContext);
-
-        var body = '';
-
-        if (i === 2) {
-            body =
-                '<h1 class="q">What kind of date sounds right?</h1>' +
-                '<p class="muted">Choose the feeling you\u2019d like.</p>' +
-                tiles() +
-                '<h2>What\u2019s the budget feeling?</h2>' +
-                chips('budget', BUDGET, 'single');
-
-        } else if (i === 4) {
-            body =
-                '<h1 class="q">What should we do after?</h1>' + pickHint +
-                chips('after', AFTER, 'multi');
-
-        } else if (i === 5) {
-            body =
-                '<h1 class="q">The little details</h1>' +
-                '<p class="muted">Pick one for each.</p>' +
-                '<div class="group"><h2>What should we wear?</h2>' + chips('dress', DRESS, 'single') + '</div>' +
-                '<div class="group"><h2>How do we get there?</h2>' + chips('getting', GETTING, 'single') + '</div>';
-
-        } else if (i === 6) {
-            body =
-                '<h1 class="q">When works for you?</h1>' + pickHint +
-                chips('when', WHEN, 'multi') +
-                '<div class="field" style="margin-top:1.25rem">' +
-                '<label for="day">A specific day, if you have one</label>' +
-                '<input id="day" type="date" data-a="day" value="' + esc(A.day) + '">' +
-                '</div>' +
-                '<div class="field">' +
-                '<label for="time">A specific time, if you have one</label>' +
-                '<input id="time" type="time" data-a="time" value="' + esc(A.time) + '">' +
-                '</div>';
-
-        } else {
-            body =
-                '<h1 class="q">Anything else for ' + esc(inv.a) + '?</h1>' +
-                '<p class="muted">Both parts are optional.</p>' +
-                '<div class="field">' +
-                '<label for="note">A note</label>' +
-                '<textarea id="note" data-a="note" rows="3" maxlength="300" ' +
-                'placeholder="A song to play, a joke, a request">' + esc(A.note) + '</textarea>' +
-                '</div>' +
-                '<div class="group">' +
-                '<h2>Add a little something</h2>' +
-                '<p class="muted">Pick a line to end your message with, or write your own.</p>' +
-                chips('flirt', FLIRT, 'single') +
-                '<div class="field" style="margin-top:1rem">' +
-                '<label for="flirtOwn">Or write your own</label>' +
-                '<input id="flirtOwn" type="text" data-a="flirtOwn" maxlength="100" value="' + esc(A.flirtOwn) + '">' +
-                '</div>' +
-                '</div>';
-        }
-
-        var isLastStep = i === TOTAL_STEPS - 1;
-
-        return (
-            banner() +
-            '<section class="card">' +
-            progress(i) +
-            body +
-            '<div class="row">' +
-            '<button type="button" class="btn" data-act="prev">Back</button>' +
-            '<button type="button" class="btn primary" data-act="next">' +
-            (isLastStep ? 'See my plan' : 'Next') +
-            '</button>' +
-            '</div>' +
-            '</section>' +
-            footer()
-        );
+        return screenPlanPhoto(state.step, PHOTO_STEPS[state.step]);
     }
 
-    // The photo variant of a planner step: food, drinks/dessert, or places.
     function screenPlanPhoto(i, context) {
+        var inv = state.invite;
         var A = state.ans;
         var isLastStep = i === TOTAL_STEPS - 1;
+        var pickHint = '<p class="muted">Pick as many as you like.</p>';
         var heading, sub, body;
 
         if (context === 'food') {
@@ -668,7 +602,15 @@ import { mountScreen, switchScreen } from './transitions.js';
                 '<h2>What are we drinking?</h2>' + chips('drinks', DRINKS, 'multi', 'glass') +
                 '<h2 style="margin-top:1.5rem">And for dessert?</h2>' + chips('dessert', DESSERTS, 'multi', 'glass');
 
-        } else {
+        } else if (context === 'vibe') {
+            heading = 'What kind of date sounds right?';
+            sub = 'Choose the feeling you\u2019d like.';
+            body =
+                tiles() +
+                '<h2 style="margin-top:1.5rem">What\u2019s the budget feeling?</h2>' +
+                chips('budget', BUDGET, 'single', 'glass');
+
+        } else if (context === 'places') {
             heading = 'Where would you like to go?';
             sub = 'Pick as many as you like.';
             body =
@@ -677,6 +619,55 @@ import { mountScreen, switchScreen } from './transitions.js';
                 '<label for="ideas">Have a specific place in mind?</label>' +
                 '<input id="ideas" type="text" data-a="ideas" maxlength="120" ' +
                 'placeholder="A caf\u00e9 you\u2019ve been wanting to try" value="' + esc(A.ideas) + '">' +
+                '</div>';
+
+        } else if (context === 'after') {
+            heading = 'What should we do after?';
+            sub = 'Pick as many as you like.';
+            body = chips('after', AFTER, 'multi', 'glass');
+
+        } else if (context === 'details') {
+            heading = 'The little details';
+            sub = 'Pick one for each.';
+            body =
+                '<h2>What should we wear?</h2>' + chips('dress', DRESS, 'single', 'glass') +
+                '<h2 style="margin-top:1.5rem">How do we get there?</h2>' + chips('getting', GETTING, 'single', 'glass');
+
+        } else if (context === 'when') {
+            heading = 'When works for you?';
+            sub = 'Pick as many as you like.';
+            body =
+                chips('when', WHEN, 'multi', 'glass') +
+                '<div class="glass-panel">' +
+                '<div class="field">' +
+                '<label for="day">A specific day, if you have one</label>' +
+                '<input id="day" type="date" data-a="day" value="' + esc(A.day) + '">' +
+                '</div>' +
+                '<div class="field" style="margin-bottom:0">' +
+                '<label for="time">A specific time, if you have one</label>' +
+                '<input id="time" type="time" data-a="time" value="' + esc(A.time) + '">' +
+                '</div>' +
+                '</div>';
+
+        } else {
+            heading = 'Anything else for ' + esc(inv.a) + '?';
+            sub = 'Both parts are optional.';
+            body =
+                '<div class="glass-panel">' +
+                '<div class="field" style="margin-bottom:0">' +
+                '<label for="note">A note</label>' +
+                '<textarea id="note" data-a="note" rows="3" maxlength="300" ' +
+                'placeholder="A song to play, a joke, a request">' + esc(A.note) + '</textarea>' +
+                '</div>' +
+                '</div>' +
+                '<h2 style="margin-top:1.5rem">Add a little something</h2>' +
+                '<p class="muted">Pick a line to end your message with, or write your own.</p>' +
+                chips('flirt', FLIRT, 'single', 'glass') +
+                '<div class="glass-panel">' +
+                '<div class="field" style="margin-bottom:0">' +
+                '<label for="flirtOwn">Or write your own</label>' +
+                '<input id="flirtOwn" type="text" data-a="flirtOwn" maxlength="100" value="' + esc(A.flirtOwn) + '">' +
+                '</div>' +
                 '</div>';
         }
 
@@ -774,6 +765,11 @@ import { mountScreen, switchScreen } from './transitions.js';
             heading.focus({ preventScroll: true });
         }
         window.scrollTo(0, 0);
+
+        // A textarea might already hold text on first paint (the default
+        // question, an edited note, a No/Maybe reply) — size it correctly
+        // right away instead of waiting for the person to type.
+        app.querySelectorAll('textarea').forEach(autoGrow);
 
         dodges = 0;
     }
@@ -1040,6 +1036,8 @@ import { mountScreen, switchScreen } from './transitions.js';
 
     document.addEventListener('input', function (e) {
         var t = e.target;
+
+        if (t.tagName === 'TEXTAREA') autoGrow(t);
 
         if (t.dataset.f) {
             state.draft[t.dataset.f] = t.type === 'checkbox' ? (t.checked ? 1 : 0) : t.value;
