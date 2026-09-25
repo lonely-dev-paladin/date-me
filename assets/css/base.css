@@ -108,6 +108,16 @@ p {
   padding: var(--sp-4) var(--sp-3) 3.5rem;
 }
 
+/* Only the create screen needs the wider stage — its split,
+   landscape-on-desktop layout needs room a poster-style card
+   doesn't. Every other screen keeps the narrower column, which
+   reads better for a question, a list of chips, or a summary. */
+@media (min-width: 900px) {
+  body.is-create .wrap {
+    max-width: 1080px;
+  }
+}
+
 /* The quiet, centered card used for forms: the create screen, the
    summary, and (via .photo-screen below) every planner step. A soft
    ambient shadow sits behind the bold ink border, so the card lifts

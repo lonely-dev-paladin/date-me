@@ -460,14 +460,18 @@ import { mountScreen, switchScreen } from './transitions.js';
         }
 
         return (
+            '<section class="create-layout">' +
+
+            '<div class="create-photo">' + photoBg('create') + '</div>' +
+
+            '<div class="create-panel">' +
             '<header class="hero">' +
             '<h1>Ask someone on a date</h1>' +
             '<p class="lede">Fill this in and send them the link. They can say yes, ' +
             'then help plan the date with you.</p>' +
             '</header>' +
 
-            '<section class="card">' +
-
+            '<div class="field-row two-col">' +
             '<div class="field">' +
             '<label for="f-a">Your name</label>' +
             '<input id="f-a" type="text" data-f="a" maxlength="40" autocomplete="given-name" ' +
@@ -477,6 +481,7 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<div class="field">' +
             '<label for="f-b">Their name</label>' +
             '<input id="f-b" type="text" data-f="b" maxlength="40" placeholder="Sam" value="' + esc(d.b) + '">' +
+            '</div>' +
             '</div>' +
 
             '<div class="field">' +
@@ -492,6 +497,7 @@ import { mountScreen, switchScreen } from './transitions.js';
 
             '<fieldset><legend class="kicker">Flirty touches (optional)</legend>' +
 
+            '<div class="field-row two-col">' +
             '<div class="field">' +
             '<label for="f-p">A line under your question</label>' +
             '<input id="f-p" type="text" data-f="p" maxlength="100" placeholder="P.S. \u2026" value="' + esc(d.p) + '">' +
@@ -504,6 +510,7 @@ import { mountScreen, switchScreen } from './transitions.js';
             'placeholder="Shown before they plan the date" value="' + esc(d.y) + '">' +
             '<div class="ideas">' + ideaChips('y', YES_IDEAS) + '</div>' +
             '</div>' +
+            '</div>' +
 
             '</fieldset>' +
 
@@ -514,6 +521,7 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<button type="button" class="btn" data-act="preview">Preview</button>' +
             '</div>' +
 
+            '</div>' +
             '</section>' +
             result
         );
@@ -761,7 +769,7 @@ import { mountScreen, switchScreen } from './transitions.js';
        ======================================================================= */
 
     function isPhotoScreen(s, i) {
-        return s === 'invite' || s === 'reveal' || (s === 'plan' && PHOTO_STEPS[i] !== undefined);
+        return s === 'create' || s === 'invite' || s === 'reveal' || (s === 'plan' && PHOTO_STEPS[i] !== undefined);
     }
 
     function afterSwap() {
@@ -791,6 +799,11 @@ import { mountScreen, switchScreen } from './transitions.js';
         // Background shapes only show behind non-photo screens.
         document.body.setAttribute('data-shapes', photoNow ? 'off' : 'on');
         document.body.setAttribute('data-screen', s === 'done' ? 'done' : 'form');
+
+        // The create screen alone gets a wider container on desktop, for
+        // its side-by-side split layout — every other screen keeps the
+        // narrower, more readable column.
+        document.body.classList.toggle('is-create', s === 'create');
 
         setSkin(state.mode === 'invite' ? state.invite.s : state.draft.s);
 
@@ -1028,10 +1041,10 @@ import { mountScreen, switchScreen } from './transitions.js';
             var field = fill.dataset.fill;
             state.draft[field] = fill.dataset.text;
             var box = document.getElementById('f-' + field);
-            if (box) {
-                box.value = fill.dataset.text;
-                box.focus();
-            }
+            // Fill the value without focusing the field — the person tapped
+            // a suggestion specifically to avoid typing, so pulling up the
+            // on-screen keyboard right after would defeat the point.
+            if (box) box.value = fill.dataset.text;
             return;
         }
 

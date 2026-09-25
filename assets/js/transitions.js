@@ -14,6 +14,12 @@
 
 var EXIT_MS = 180; // must match --dur-fast in tokens.css
 
+// Everything that should cascade in one-after-another on a fresh
+// screen: the choice controls (chips, tiles, skin swatches), and —
+// for the cinematic, "immersive storytelling" entrance — the actual
+// buttons and form fields too, on every screen that has them.
+var STAGGER_SELECTOR = '.chip, .tile, .skin, .toggle, .field, .row > .btn, .stack > .btn, .stack > .linkbtn';
+
 /**
  * Mark every direct child of `container` that should animate in with
  * a staggered delay. Called after new HTML is injected, before the
@@ -44,7 +50,7 @@ export function mountScreen(app, html) {
     // screen-enter is added, or the animation can fail to restart.
     void app.offsetWidth;
     app.classList.add('screen-enter');
-    tagStagger(app, '.chip, .tile, .skin');
+    tagStagger(app, STAGGER_SELECTOR);
 }
 
 /**
@@ -64,7 +70,7 @@ export function switchScreen(app, html, onSwapped) {
     if (reduceMotion) {
         app.innerHTML = html;
         if (onSwapped) onSwapped();
-        tagStagger(app, '.chip, .tile, .skin');
+        tagStagger(app, STAGGER_SELECTOR);
         return;
     }
 
@@ -78,6 +84,6 @@ export function switchScreen(app, html, onSwapped) {
         app.classList.remove('screen-exit');
         void app.offsetWidth; // reflow, see mountScreen()
         app.classList.add('screen-enter');
-        tagStagger(app, '.chip, .tile, .skin');
+        tagStagger(app, STAGGER_SELECTOR);
     }, EXIT_MS);
 }

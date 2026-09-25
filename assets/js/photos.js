@@ -24,6 +24,7 @@
 var PHOTO_LABELS = {
     invite: 'invite photo',
     reveal: 'reveal photo',
+    create: 'landing photo',
     food: 'food photo',
     drinks: 'drinks photo',
     places: 'place photo',

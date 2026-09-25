@@ -2,7 +2,8 @@
    photo-screens.css
    -------------------------------------------------------------------------
    The editorial, full-bleed photo layout used for the invite, the
-   reveal, and the food / drinks / places planner steps.
+   reveal, and the food / drinks / places planner steps — plus the
+   split, landscape-on-desktop layout used just for the create screen.
 
      1. PLACEHOLDER PHOTOS — a themed gradient stands in for a real
                               photo until one is added (see the note
@@ -11,6 +12,9 @@
                               overlay, and content positioning
      3. CAPTION            — the small "photo of ___ here" label,
                               only visible while a placeholder is showing
+     4. CREATE SCREEN LAYOUT — mobile: photo banner on top, form below.
+                                Desktop: a true side-by-side split, not
+                                a stretched mobile column.
    ========================================================================= */
 
 /* =========================================================================
@@ -36,6 +40,11 @@
   --photo-details: url('../images/8.jpg');
   --photo-when: url('../images/9.jpg');
   --photo-note: url('../images/9.jpg');
+  --photo-create: url('../images/4.jpg');
+}
+
+.photo-bg[data-photo="create"] {
+  background-image: var(--photo-create), linear-gradient(155deg, #3B1150 0%, #6E2A55 45%, #C9A15A 100%);
 }
 
 .photo-bg[data-photo="invite"] {
@@ -235,4 +244,96 @@
   width: 13px;
   height: 13px;
   flex: none;
+}
+
+/* =========================================================================
+   4. CREATE SCREEN LAYOUT
+   -------------------------------------------------------------------------
+   One responsive structure, not two separate designs: by default
+   (mobile, and any narrow window) the photo sits as a banner above a
+   single-column form. Past the desktop breakpoint, the same markup
+   becomes a true side-by-side split — the photo filling one half,
+   the form a genuinely landscape composition in the other — instead
+   of the mobile column just stretching wider.
+   ========================================================================= */
+
+.create-layout {
+  position: relative;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  box-shadow: 0 22px 44px -26px rgba(34, 20, 58, 0.4);
+  margin-bottom: var(--sp-3);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.create-photo {
+  position: relative;
+  min-height: 200px;
+}
+
+/* A lighter vignette than the poster screens use — this panel never
+   carries text of its own, so it only needs enough depth to read as
+   a deliberate frame rather than a stretched-thin banner. */
+.create-photo .photo-overlay {
+  background: linear-gradient(
+    to top,
+    rgba(10, 5, 15, 0.45) 0%,
+    rgba(10, 5, 15, 0.1) 60%,
+    rgba(10, 5, 15, 0) 100%
+  );
+}
+
+.create-panel {
+  background: var(--paper);
+  padding: var(--sp-5) var(--sp-4) var(--sp-4);
+}
+
+@media (min-width: 900px) {
+  .create-layout {
+    grid-template-columns: 1fr 1fr;
+    min-height: 680px;
+  }
+
+  .create-photo {
+    min-height: 100%;
+  }
+
+  /* The overlay only needs to hold up the top-right caption at this
+     width — the rest of the photo is free to breathe. */
+  .create-photo .photo-overlay {
+    background: linear-gradient(
+      to bottom,
+      rgba(10, 5, 15, 0.35) 0%,
+      rgba(10, 5, 15, 0) 30%
+    );
+  }
+
+  .create-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--sp-6) var(--sp-6);
+  }
+
+  .create-panel .hero {
+    padding: 0;
+  }
+}
+
+/* A field-row is single-column by default and becomes a genuine
+   side-by-side pairing — "Your name" / "Their name" — once there's
+   enough width for two fields to actually read as a landscape row
+   rather than a cramped one. */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .field-row.two-col {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 1rem;
+  }
 }
