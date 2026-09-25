@@ -772,17 +772,34 @@ import { mountScreen, switchScreen } from './transitions.js';
         return s === 'create' || s === 'invite' || s === 'reveal' || (s === 'plan' && PHOTO_STEPS[i] !== undefined);
     }
 
+    // Set right before a render() that should land somewhere other than
+    // the top of the screen — see the 'make' action below.
+    var pendingScrollTo = null;
+
     function afterSwap() {
         document.title = state.mode === 'invite'
             ? state.invite.a + ' has a question for you'
             : 'Ask someone on a date';
 
-        var heading = app.querySelector('h1');
-        if (heading) {
-            heading.setAttribute('tabindex', '-1');
-            heading.focus({ preventScroll: true });
+        var target = pendingScrollTo ? document.getElementById(pendingScrollTo) : null;
+        pendingScrollTo = null;
+
+        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (target) {
+            // A specific element was asked for (the new invite link, say) —
+            // scroll it into view and, if it's focusable, move focus there
+            // instead of resetting to the top of the screen.
+            target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+            target.focus({ preventScroll: true });
+        } else {
+            var heading = app.querySelector('h1');
+            if (heading) {
+                heading.setAttribute('tabindex', '-1');
+                heading.focus({ preventScroll: true });
+            }
+            window.scrollTo(0, 0);
         }
-        window.scrollTo(0, 0);
 
         // A textarea might already hold text on first paint (the default
         // question, an edited note, a No/Maybe reply) — size it correctly
@@ -888,13 +905,11 @@ import { mountScreen, switchScreen } from './transitions.js';
             case 'make':
                 if (!validateDraft()) return;
                 state.link = location.href.split('#')[0] + '#i=' + encode(draftToInvite());
+                // The new link box won't exist in the DOM until after this
+                // render's swap finishes — afterSwap() picks this up and
+                // scrolls/focuses it then, instead of resetting to the top.
+                pendingScrollTo = 'linkbox';
                 render();
-
-                var result = document.getElementById('result');
-                if (result) {
-                    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                    result.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-                }
                 break;
 
             case 'preview':
