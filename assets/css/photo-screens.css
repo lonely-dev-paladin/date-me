@@ -30,17 +30,17 @@
    ========================================================================= */
 
 :root {
-  --photo-invite: url('../images/1.jpg');
-  --photo-reveal: url('../images/2.jpg');
-  --photo-food:   url('../images/3.jpg');
-  --photo-drinks: url('../images/4.jpg');
-  --photo-places: url('../images/5.jpg');
-  --photo-vibe: url('../images/6.jpg');
-  --photo-after: url('../images/7.jpg');
-  --photo-details: url('../images/8.jpg');
-  --photo-when: url('../images/9.jpg');
-  --photo-note: url('../images/9.jpg');
-  --photo-create: url('../images/4.jpg');
+  --photo-invite: url('../images/global.jpg');
+  --photo-reveal: url('../images/global.jpg');
+  --photo-food:   url('../images/global.jpg');
+  --photo-drinks: url('../images/global.jpg');
+  --photo-places: url('../images/global.jpg');
+  --photo-vibe: url('../images/global.jpg');
+  --photo-after: url('../images/global.jpg');
+  --photo-details: url('../images/global.jpg');
+  --photo-when: url('../images/global.jpg');
+  --photo-note: url('../images/global.jpg');
+  --photo-create: url('../images/global.jpg');
 }
 
 .photo-bg[data-photo="create"] {
