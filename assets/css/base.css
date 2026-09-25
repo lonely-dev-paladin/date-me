@@ -23,6 +23,11 @@
 html {
   background: var(--bg);
   scroll-padding-top: env(safe-area-inset-top, 0px);
+  /* Every tappable element here already has its own deliberate
+     press state (the sticker-button offset, the chip pop, the tile
+     ring) — the browser's default blue tap flash on top of that
+     just looks like a glitch. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -36,9 +41,11 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+a {
   font: inherit;
   color: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 h1,
