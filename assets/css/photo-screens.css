@@ -90,6 +90,7 @@
   overflow: hidden;
   margin-bottom: var(--sp-3);
   border: 2px solid var(--ink);
+  box-shadow: 0 22px 44px -26px rgba(34, 20, 58, 0.4);
 
   /* Tall enough to feel cinematic, capped so it never eats the
      whole viewport on short phones. */

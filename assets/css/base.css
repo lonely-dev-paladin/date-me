@@ -3,8 +3,9 @@
    -------------------------------------------------------------------------
      1. RESET       — resets and defaults for plain HTML elements
      2. LAYOUT       — the page wrapper and the two card styles
-     3. BUTTONS      — every button style, including the dodging "No"
-     4. FORM FIELDS  — text inputs, checkboxes, error messages
+     3. BUTTONS      — every button style, including hover/press physics
+                        and the dodging "No"
+     4. FORM FIELDS  — text inputs, the toggle switch, error messages
      5. CHIPS AND TILES — the option buttons used on the planner screens
      6. SMALL PIECES — the preview banner and the "copied" toast
    ========================================================================= */
@@ -84,6 +85,17 @@ p {
   font-weight: 400;
 }
 
+/* A small uppercase, letter-spaced label used above a fieldset's
+   options — an editorial "section kicker" rather than a plain bold
+   label, for the fussier detail work a premium layout needs. */
+.kicker {
+  font: 700 0.78rem/1 var(--body);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.7rem;
+}
+
 /* =========================================================================
    2. LAYOUT
    ========================================================================= */
@@ -97,7 +109,9 @@ p {
 }
 
 /* The quiet, centered card used for forms: the create screen, the
-   date/time step, the note, No/Maybe replies, and the summary. */
+   summary, and (via .photo-screen below) every planner step. A soft
+   ambient shadow sits behind the bold ink border, so the card lifts
+   off the page instead of reading as a flat rectangle. */
 .card {
   background: var(--paper);
   color: var(--ink);
@@ -105,6 +119,7 @@ p {
   border-radius: var(--radius-card);
   padding: var(--sp-4) 1.25rem;
   margin-bottom: var(--sp-3);
+  box-shadow: 0 22px 44px -26px rgba(34, 20, 58, 0.4);
 }
 
 .hero {
@@ -140,7 +155,29 @@ p {
   cursor: pointer;
   text-decoration: none;
   box-shadow: 4px 4px 0 var(--ink);
-  transition: transform var(--dur-fast) var(--ease-premium), box-shadow var(--dur-fast) var(--ease-premium);
+  transition:
+    transform var(--dur-fast) var(--ease-premium),
+    box-shadow var(--dur-fast) var(--ease-premium),
+    background-color var(--dur-fast) var(--ease-premium);
+}
+
+/* A pointer-only lift, so a mouse hovering a button feels its weight
+   before pressing it. Placed before :active in the cascade on purpose:
+   a real press should always win over a lingering hover state. */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 8px 0 var(--ink);
+  }
+
+  .btn.glass:hover {
+    transform: translateY(-2px);
+    background: rgba(20, 12, 30, 0.48);
+  }
+
+  .btn.glass.primary:hover {
+    background: #dcb772;
+  }
 }
 
 .btn:active {
@@ -167,7 +204,8 @@ p {
 }
 
 /* The glass-pill button style used on top of a photo, where a solid
-   ink-bordered sticker button would fight with the image underneath. */
+   ink-bordered sticker button would fight with the image underneath.
+   Only 2–3 of these exist per screen, so the blur is cheap. */
 .btn.glass {
   border-color: rgba(255, 255, 255, 0.7);
   background: rgba(20, 12, 30, 0.35);
@@ -200,21 +238,32 @@ p {
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: opacity var(--dur-fast) var(--ease-premium);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .linkbtn:hover {
+    opacity: 0.7;
+  }
 }
 
 .linkbtn.on-photo {
   color: #fff;
 }
 
+/* A warmer, more deliberate focus ring than a plain dark outline —
+   gold on paper, white on a photo — kept as an outline (rather than
+   box-shadow) so it never fights with a button's own resting shadow. */
 .btn:focus-visible,
 .chip:focus-visible,
 .tile:focus-visible,
 .skin:focus-visible,
 .linkbtn:focus-visible,
+.toggle-input:focus-visible + .toggle-track,
 input:focus-visible,
 textarea:focus-visible,
 a:focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 3px solid var(--gold);
   outline-offset: 3px;
 }
 
@@ -278,6 +327,7 @@ textarea {
   border: 2px solid var(--ink);
   border-radius: var(--radius-field);
   padding: 0.75rem 0.9rem;
+  transition: border-color var(--dur-fast) var(--ease-premium), box-shadow var(--dur-fast) var(--ease-premium);
 }
 
 textarea {
@@ -292,20 +342,81 @@ textarea::placeholder {
   opacity: 1;
 }
 
-.check {
-  display: flex;
-  gap: 0.7rem;
-  align-items: flex-start;
-  font-weight: 500;
-  margin-bottom: 1rem;
+/* A subtle "lift" the instant a field is focused, on top of the
+   shared gold outline above — small, but it's the kind of detail
+   that makes a form feel considered rather than default. */
+input[type="text"]:focus-visible,
+input[type="date"]:focus-visible,
+input[type="time"]:focus-visible,
+textarea:focus-visible {
+  border-color: var(--gold);
 }
 
-.check input {
-  width: 22px;
-  height: 22px;
-  margin: 0.1rem 0 0;
-  accent-color: var(--a);
+/* =========================================================================
+   The toggle switch
+   Stands in for a native checkbox. The real <input type="checkbox">
+   stays in the DOM — visually hidden, but present for keyboard focus,
+   screen readers, and the app's existing input-event handling — the
+   track and thumb are pure decoration driven by :checked.
+   ========================================================================= */
+
+.toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.toggle-track {
   flex: none;
+  position: relative;
+  width: 46px;
+  height: 28px;
+  margin-top: 0.05rem;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  transition: background-color var(--dur-normal) var(--ease-premium);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform var(--dur-normal) var(--ease-premium);
+}
+
+.toggle-input:checked + .toggle-track {
+  background: var(--a);
+  border-color: var(--a);
+}
+
+.toggle-input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(18px);
+  background: var(--paper);
+}
+
+.toggle-label {
+  flex: 1;
+  padding-top: 0.15rem;
 }
 
 .error {
@@ -341,6 +452,7 @@ textarea::placeholder {
   color: var(--ink);
   font: 500 1rem/1.1 var(--body);
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-premium), color var(--dur-fast) var(--ease-premium), border-color var(--dur-fast) var(--ease-premium);
 }
 
 .chip[aria-pressed="true"] {
@@ -354,8 +466,8 @@ textarea::placeholder {
   font-size: 0.92rem;
 }
 
-/* Chips shown over a photo: light glass instead of an ink outline. */
-/* No backdrop-filter here on purpose: a photo step can show a dozen
+/* Chips shown over a photo: light glass instead of an ink outline.
+   No backdrop-filter here on purpose: a photo step can show a dozen
    of these at once, and a live blur on each one is a real performance
    cost. A solid semi-opaque fill reads almost the same and costs
    nothing to render. */
@@ -369,6 +481,23 @@ textarea::placeholder {
   background: var(--gold);
   border-color: var(--gold);
   color: #241705;
+  /* A thin inner highlight instead of blur — the "glass edge" catches
+     the eye without costing anything to render. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* The brief scale-pop played once, right when a chip or tile is
+   selected — see popIn() in app.js. Kept as its own animation rather
+   than a :active/:hover effect, since it should play once on the
+   moment of selection and nowhere else. */
+.pop {
+  animation: chipPop 0.4s var(--ease-premium);
+}
+
+@keyframes chipPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
 }
 
 .tiles {
@@ -377,34 +506,72 @@ textarea::placeholder {
   margin-bottom: 1.5rem;
 }
 
+/* Each vibe tile pairs a small icon badge with a title + subtitle —
+   selection shows as a colored accent (the badge and border switch to
+   --a, plus a thin inset ring) rather than an inverted background,
+   so the card keeps reading as a card rather than flipping to a
+   solid block of color. */
 .tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
   text-align: left;
-  padding: 0.9rem 1rem;
+  padding: 1rem 1.1rem;
   border: 2px solid var(--ink);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--paper);
   color: var(--ink);
   cursor: pointer;
   box-shadow: 3px 3px 0 var(--ink);
+  position: relative;
+  transition: border-color var(--dur-fast) var(--ease-premium), box-shadow var(--dur-fast) var(--ease-premium);
 }
 
-.tile b {
-  display: block;
+.tile-icon {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  transition: background-color var(--dur-fast) var(--ease-premium);
+}
+
+.tile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.1rem;
+}
+
+.tile-text b {
   font: 700 1.1rem/1.2 var(--display);
 }
 
-.tile span {
+.tile-text span {
   color: var(--muted);
   font-size: 0.95rem;
 }
 
 .tile[aria-pressed="true"] {
-  background: var(--b);
-  color: var(--b-ink);
+  border-color: var(--a);
+  box-shadow: 3px 3px 0 var(--a);
 }
 
-.tile[aria-pressed="true"] span {
-  color: var(--b-ink);
+.tile[aria-pressed="true"] .tile-icon {
+  background: var(--a);
+}
+
+.tile[aria-pressed="true"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px var(--a);
+  pointer-events: none;
 }
 
 .skins {
@@ -425,6 +592,7 @@ textarea::placeholder {
   color: var(--ink);
   font-weight: 500;
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-premium), color var(--dur-fast) var(--ease-premium);
 }
 
 .skin[aria-pressed="true"] {
@@ -574,7 +742,16 @@ textarea::placeholder {
 
 @media (prefers-reduced-motion: reduce) {
   .btn,
+  .chip,
+  .tile,
+  .skin,
+  .toggle-track,
+  .toggle-thumb,
   #nobtn {
     transition: none;
+  }
+
+  .pop {
+    animation: none;
   }
 }

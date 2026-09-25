@@ -85,11 +85,11 @@ import { mountScreen, switchScreen } from './transitions.js';
     var GETTING = ['Meet there', 'Pick me up', 'Commute together'];
 
     var VIBES = [
-        ['Simple and relaxed', 'Casual, comfy, no pressure'],
-        ['Elegant', 'Dress up a little, get a nice table'],
-        ['Cozy', 'A quiet corner and something warm'],
-        ['Adventurous', 'Try something new together'],
-        ['Playful', 'Games, laughs, and silly fun']
+        ['Simple and relaxed', 'Casual, comfy, no pressure', '\u2615'],
+        ['Elegant', 'Dress up a little, get a nice table', '\u2728'],
+        ['Cozy', 'A quiet corner and something warm', '\uD83D\uDD6F\uFE0F'],
+        ['Adventurous', 'Try something new together', '\uD83E\uDDED'],
+        ['Playful', 'Games, laughs, and silly fun', '\uD83C\uDFB2']
     ];
 
     var FLIRT = [
@@ -357,16 +357,34 @@ import { mountScreen, switchScreen } from './transitions.js';
         }).join('');
     }
 
+    // A custom on/off switch, standing in for a native checkbox. The
+    // real <input type="checkbox"> is still there — visually hidden,
+    // but present for keyboard use, screen readers, and the existing
+    // input-event handling in state.draft — the track and thumb next
+    // to it are pure decoration driven by :checked in CSS.
+    function toggle(field, isOn, label, hint) {
+        return (
+            '<label class="toggle">' +
+            '<input type="checkbox" class="toggle-input" data-f="' + field + '" ' + (isOn ? 'checked' : '') + '>' +
+            '<span class="toggle-track"><span class="toggle-thumb"></span></span>' +
+            '<span class="toggle-label">' + esc(label) +
+            (hint ? '<span class="hint">' + esc(hint) + '</span>' : '') +
+            '</span>' +
+            '</label>'
+        );
+    }
+
     function tiles() {
         var buttons = VIBES.map(function (v) {
-            var title = v[0], subtitle = v[1];
+            var title = v[0], subtitle = v[1], icon = v[2];
             var isOn = state.ans.vibe === title;
 
             return (
                 '<button type="button" class="tile" data-chip ' +
                 'data-key="vibe" data-mode="single" data-val="' + esc(title) + '" ' +
                 'aria-pressed="' + isOn + '">' +
-                '<b>' + esc(title) + '</b><span>' + esc(subtitle) + '</span>' +
+                '<span class="tile-icon" aria-hidden="true">' + icon + '</span>' +
+                '<span class="tile-text"><b>' + esc(title) + '</b><span>' + esc(subtitle) + '</span></span>' +
                 '</button>'
             );
         }).join('');
@@ -466,21 +484,13 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<textarea id="f-m" data-f="m" rows="2" maxlength="160">' + esc(d.m) + '</textarea>' +
             '</div>' +
 
-            '<fieldset><legend>Look</legend><div class="skins">' + skinButtons + '</div></fieldset>' +
+            '<fieldset><legend class="kicker">Look</legend><div class="skins">' + skinButtons + '</div></fieldset>' +
 
-            '<label class="check">' +
-            '<input type="checkbox" data-f="t" ' + (d.t ? 'checked' : '') + '>' +
-            '<span>Add a \u201CLet me think about it\u201D option</span>' +
-            '</label>' +
+            toggle('t', d.t, 'Add a \u201CLet me think about it\u201D option') +
+            toggle('d', d.d, 'Make the No button dodge',
+                'It stops dodging after a few tries, so a real No always works.') +
 
-            '<label class="check">' +
-            '<input type="checkbox" data-f="d" ' + (d.d ? 'checked' : '') + '>' +
-            '<span>Make the No button dodge' +
-            '<span class="hint">It stops dodging after a few tries, so a real No always works.</span>' +
-            '</span>' +
-            '</label>' +
-
-            '<fieldset><legend>Flirty touches (optional)</legend>' +
+            '<fieldset><legend class="kicker">Flirty touches (optional)</legend>' +
 
             '<div class="field">' +
             '<label for="f-p">A line under your question</label>' +
@@ -819,6 +829,15 @@ import { mountScreen, switchScreen } from './transitions.js';
         return state.invite && state.invite.d && dodges < 5;
     }
 
+    // A brief, spring-like scale pop whenever a chip or tile is selected —
+    // removed automatically once the animation finishes, so it can play
+    // again the next time the same element is picked.
+    function popIn(el) {
+        el.classList.remove('pop');
+        void el.offsetWidth; // reflow, lets the animation restart if it's still mid-way
+        el.classList.add('pop');
+    }
+
     function validateDraft() {
         var d = state.draft;
         var err = document.getElementById('err');
@@ -986,14 +1005,20 @@ import { mountScreen, switchScreen } from './transitions.js';
             if (chip.dataset.mode === 'multi') {
                 var arr = state.ans[key];
                 var idx = arr.indexOf(val);
-                if (idx > -1) arr.splice(idx, 1);
-                else arr.push(val);
+                if (idx > -1) {
+                    arr.splice(idx, 1);
+                } else {
+                    arr.push(val);
+                    popIn(chip);
+                }
                 chip.setAttribute('aria-pressed', String(idx === -1));
             } else {
-                state.ans[key] = state.ans[key] === val ? '' : val;
+                var turningOn = state.ans[key] !== val;
+                state.ans[key] = turningOn ? val : '';
                 document.querySelectorAll('[data-chip][data-key="' + key + '"]').forEach(function (x) {
                     x.setAttribute('aria-pressed', String(state.ans[key] === x.dataset.val));
                 });
+                if (turningOn) popIn(chip);
             }
             return;
         }
