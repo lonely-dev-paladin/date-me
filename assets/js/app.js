@@ -200,6 +200,27 @@ import { mountScreen, switchScreen } from './transitions.js';
         el.style.height = el.scrollHeight + 'px';
     }
 
+    var SCROLL_HINT_SVG =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+    // Desktop hides the native scrollbar on .card / .photo-content /
+    // .create-panel (see base.css) — this is what replaces it. Adds the
+    // hint element once per container, then toggles it on only when
+    // that container's content actually overflows (a short one just
+    // never gets it). See the .scroll-hint rules in base.css for how
+    // the fade-and-chevron itself works.
+    function refreshScrollHints() {
+        app.querySelectorAll('.panel-scroll').forEach(function (el) {
+            if (!el.querySelector(':scope > .scroll-hint')) {
+                var hint = document.createElement('div');
+                hint.className = 'scroll-hint';
+                hint.innerHTML = SCROLL_HINT_SVG;
+                el.appendChild(hint);
+            }
+            el.classList.toggle('is-scrollable', el.scrollHeight > el.clientHeight + 1);
+        });
+    }
+
     function toast(msg) {
         toastEl.textContent = msg;
         toastEl.classList.add('show');
@@ -444,7 +465,7 @@ import { mountScreen, switchScreen } from './transitions.js';
         var result = '';
         if (state.link) {
             result =
-                '<section class="card" id="result">' +
+                '<div class="result-box">' +
                 '<h2>Your link is ready</h2>' +
                 '<p>Send it to ' + esc(d.b.trim()) + '. Nothing is stored on a server, ' +
                 'because the invitation lives inside the link.</p>' +
@@ -456,7 +477,7 @@ import { mountScreen, switchScreen } from './transitions.js';
                 '</div>' +
                 '<p class="hint" style="margin-top:1rem">When ' + esc(d.b.trim()) +
                 ' answers, the reply comes back to you as a message they send themselves.</p>' +
-                '</section>';
+                '</div>';
         }
 
         return (
@@ -465,6 +486,7 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<div class="create-photo">' + photoBg('create') + '</div>' +
 
             '<div class="create-panel">' +
+            '<div class="panel-scroll">' +
             '<header class="hero">' +
             '<h1>Ask someone on a date</h1>' +
             '<p class="lede">Fill this in and send them the link. They can say yes, ' +
@@ -515,15 +537,18 @@ import { mountScreen, switchScreen } from './transitions.js';
             '</fieldset>' +
 
             '<p class="error" id="err" role="alert"></p>' +
+            result +
+            '</div>' +
 
+            '<div class="panel-footer">' +
             '<div class="row">' +
             '<button type="button" class="btn primary" data-act="make">Create invitation link</button>' +
             '<button type="button" class="btn" data-act="preview">Preview</button>' +
             '</div>' +
+            '</div>' +
 
             '</div>' +
-            '</section>' +
-            result
+            '</section>'
         );
     }
 
@@ -536,14 +561,18 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<section class="photo-screen">' +
             photoBg('invite') +
             '<div class="photo-content">' +
+            '<div class="panel-scroll">' +
             '<p class="to">Hi ' + esc(inv.b) + ',</p>' +
             '<h1>' + esc(inv.m) + '</h1>' +
             '<p class="from">From ' + esc(inv.a) + '</p>' +
             (inv.p ? '<p class="ps">' + esc(inv.p) + '</p>' : '') +
+            '</div>' +
+            '<div class="panel-footer">' +
             '<div class="stack">' +
             '<button type="button" class="btn glass primary big" data-act="yes">Yes</button>' +
             '<button type="button" class="btn glass big" id="nobtn" data-act="no">No</button>' +
             (inv.t ? '<button type="button" class="linkbtn on-photo" data-act="maybe">Let me think about it</button>' : '') +
+            '</div>' +
             '</div>' +
             '</div>' +
             '</section>' +
@@ -563,6 +592,7 @@ import { mountScreen, switchScreen } from './transitions.js';
         return (
             banner() +
             '<section class="card">' +
+            '<div class="panel-scroll">' +
             '<h1>' + title + '</h1>' +
             '<p>' + lead + '</p>' +
 
@@ -570,7 +600,9 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<label for="reply">Your message</label>' +
             '<textarea id="reply" data-r rows="4">' + esc(state.reply) + '</textarea>' +
             '</div>' +
+            '</div>' +
 
+            '<div class="panel-footer">' +
             '<div class="row">' +
             '<button type="button" class="btn primary" data-act="sendreply">Send message</button>' +
             '<button type="button" class="btn" data-act="copyreply">Copy message</button>' +
@@ -582,6 +614,7 @@ import { mountScreen, switchScreen } from './transitions.js';
 
             '<div class="stack" style="margin-top:1rem">' +
             '<button type="button" class="linkbtn" data-act="back-invite">Change my answer</button>' +
+            '</div>' +
             '</div>' +
 
             '</section>' +
@@ -694,15 +727,19 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<section class="photo-screen">' +
             photoBg(context) +
             '<div class="photo-content">' +
+            '<div class="panel-scroll">' +
             progress(i, 'on-photo') +
             '<h1 class="q">' + heading + '</h1>' +
             '<p class="lede">' + sub + '</p>' +
             body +
+            '</div>' +
+            '<div class="panel-footer">' +
             '<div class="row">' +
             '<button type="button" class="btn glass" data-act="prev">Back</button>' +
             '<button type="button" class="btn glass primary" data-act="next">' +
             (isLastStep ? 'See my plan' : 'Next') +
             '</button>' +
+            '</div>' +
             '</div>' +
             '</div>' +
             '</section>' +
@@ -718,10 +755,14 @@ import { mountScreen, switchScreen } from './transitions.js';
             '<section class="photo-screen">' +
             photoBg('reveal') +
             '<div class="photo-content">' +
+            '<div class="panel-scroll">' +
             '<p class="to">' + esc(inv.a) + ' says:</p>' +
             '<h1>' + esc(inv.y) + '</h1>' +
+            '</div>' +
+            '<div class="panel-footer">' +
             '<div class="stack">' +
             '<button type="button" class="btn glass primary big" data-act="startplan">Plan our date</button>' +
+            '</div>' +
             '</div>' +
             '</div>' +
             '</section>' +
@@ -743,9 +784,12 @@ import { mountScreen, switchScreen } from './transitions.js';
         return (
             banner() +
             '<section class="card">' +
+            '<div class="panel-scroll">' +
             '<h1>Your plan is ready</h1>' +
             '<p>Send it to ' + esc(inv.a) + ' and they\u2019ll take it from there.</p>' +
             rows +
+            '</div>' +
+            '<div class="panel-footer">' +
             '<div class="row">' +
             '<button type="button" class="btn primary" data-act="sendyes">Send to ' + esc(inv.a) + '</button>' +
             '<button type="button" class="btn" data-act="copyyes">Copy message</button>' +
@@ -755,6 +799,7 @@ import { mountScreen, switchScreen } from './transitions.js';
             '</div>' +
             '<div class="stack" style="margin-top:1rem">' +
             '<button type="button" class="linkbtn" data-act="editplan">Edit my answers</button>' +
+            '</div>' +
             '</div>' +
             '</section>' +
             footer()
@@ -805,6 +850,11 @@ import { mountScreen, switchScreen } from './transitions.js';
         // question, an edited note, a No/Maybe reply) — size it correctly
         // right away instead of waiting for the person to type.
         app.querySelectorAll('textarea').forEach(autoGrow);
+
+        // Decide whether this screen's panel needs the scroll hint —
+        // must run after autoGrow, since a textarea resizing can be what
+        // pushes a panel from fitting to needing to scroll.
+        refreshScrollHints();
 
         dodges = 0;
     }
@@ -1090,7 +1140,10 @@ import { mountScreen, switchScreen } from './transitions.js';
     document.addEventListener('input', function (e) {
         var t = e.target;
 
-        if (t.tagName === 'TEXTAREA') autoGrow(t);
+        if (t.tagName === 'TEXTAREA') {
+            autoGrow(t);
+            refreshScrollHints();
+        }
 
         if (t.dataset.f) {
             state.draft[t.dataset.f] = t.type === 'checkbox' ? (t.checked ? 1 : 0) : t.value;
@@ -1109,6 +1162,16 @@ import { mountScreen, switchScreen } from './transitions.js';
 
     window.addEventListener('hashchange', function () {
         init();
+    });
+
+    // Resizing the window (or rotating a device, or just dragging a
+    // desktop browser taller/shorter) can flip whether a panel's
+    // content actually overflows — recheck when that settles down,
+    // rather than on every pixel of a drag.
+    var resizeTimer = null;
+    window.addEventListener('resize', function () {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(refreshScrollHints, 150);
     });
 
     /* =======================================================================

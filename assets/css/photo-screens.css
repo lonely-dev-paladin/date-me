@@ -10,9 +10,7 @@
                               at the top of js/photos.js)
      2. PHOTO SCREEN       — the full-bleed frame, dark gradient
                               overlay, and content positioning
-     3. CAPTION            — the small "photo of ___ here" label,
-                              only visible while a placeholder is showing
-     4. CREATE SCREEN LAYOUT — mobile: photo banner on top, form below.
+     3. CREATE SCREEN LAYOUT — mobile: photo banner on top, form below.
                                 Desktop: a true side-by-side split, not
                                 a stretched mobile column.
    ========================================================================= */
@@ -102,12 +100,36 @@
   box-shadow: 0 22px 44px -26px rgba(34, 20, 58, 0.4);
 
   /* Tall enough to feel cinematic, capped so it never eats the
-     whole viewport on short phones. */
-  min-height: min(78vh, 640px);
+     whole viewport on short phones — and never forces a page
+     scroll on its own when the actual content (like the invite's
+     few short lines) is much shorter than this minimum. 62vh keeps
+     the poster feel while leaving room for the banner and footer
+     link around it on a typical phone. */
+  min-height: min(62vh, 560px);
 
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+}
+
+@media (min-width: 900px) {
+  .photo-screen {
+    min-height: 0;
+    max-height: calc(100dvh - 2 * var(--sp-4));
+  }
+
+  /* The photo and its overlay always fill the panel; only the text
+     and chips scroll, and only if a short window genuinely can't
+     fit them all — the photo itself never moves. flex:1 is what
+     lets this pane actually reach the container's capped height, so
+     its own overflow scrolls instead of being clipped by the
+     photo-screen's rounded-corner overflow:hidden. */
+  .photo-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
 }
 
 .photo-bg {
@@ -216,38 +238,7 @@
 }
 
 /* =========================================================================
-   3. CAPTION
-   A small, deliberately understated label so a placeholder gradient
-   still reads as "designed," not "broken" or "missing."
-   ========================================================================= */
-
-.photo-caption {
-  position: absolute;
-  z-index: 2;
-  top: var(--sp-3);
-  right: var(--sp-3);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-pill);
-  background: rgba(10, 5, 15, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 0.78rem;
-  font-weight: 500;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.photo-caption svg {
-  width: 13px;
-  height: 13px;
-  flex: none;
-}
-
-/* =========================================================================
-   4. CREATE SCREEN LAYOUT
+   3. CREATE SCREEN LAYOUT
    -------------------------------------------------------------------------
    One responsive structure, not two separate designs: by default
    (mobile, and any narrow window) the photo sits as a banner above a
@@ -293,15 +284,20 @@
 @media (min-width: 900px) {
   .create-layout {
     grid-template-columns: 1fr 1fr;
-    min-height: 680px;
+    /* minmax(0, 1fr) rather than a plain 1fr: without the 0 minimum,
+       an auto-sized row still expands to fit its tallest item's
+       natural content, which would defeat max-height below and the
+       .create-panel scroll it depends on. */
+    grid-template-rows: minmax(0, 1fr);
+    max-height: calc(100dvh - 2 * var(--sp-4));
   }
 
   .create-photo {
-    min-height: 100%;
+    min-height: 0;
   }
 
-  /* The overlay only needs to hold up the top-right caption at this
-     width — the rest of the photo is free to breathe. */
+  /* A lighter touch at this width — there's no caption to hold up
+     anymore, so the photo is free to breathe almost fully. */
   .create-photo .photo-overlay {
     background: linear-gradient(
       to bottom,
@@ -310,11 +306,18 @@
     );
   }
 
+  /* Same viewport-fit rule as the photo screens: this panel scrolls
+     internally, on its own, only if a short window can't fit the
+     whole form — the photo beside it never moves.
+     justify-content:flex-start, not center: a centered flex container
+     with overflowing content clips whatever's above the fold with no
+     way to scroll up to it, since scroll position can't go negative —
+     that silently ate the "Ask someone on a date" heading entirely. */
   .create-panel {
     display: flex;
     flex-direction: column;
-    justify-content: center;
     padding: var(--sp-6) var(--sp-6);
+    min-height: 0;
   }
 
   .create-panel .hero {

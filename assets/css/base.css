@@ -112,16 +112,83 @@ p {
   z-index: 1;
   max-width: 560px;
   margin: 0 auto;
-  padding: var(--sp-4) var(--sp-3) 3.5rem;
+  padding: var(--sp-4) var(--sp-3) var(--sp-5);
 }
 
-/* Only the create screen needs the wider stage — its split,
-   landscape-on-desktop layout needs room a poster-style card
-   doesn't. Every other screen keeps the narrower column, which
-   reads better for a question, a list of chips, or a summary. */
+/* =========================================================================
+   Desktop: no page scrolling
+   -------------------------------------------------------------------------
+   The whole app fits the viewport — moving between screens should feel
+   like arriving at something already in place, not a webpage you
+   scroll down. Two things make that true:
+
+   1. Every screen gets more width to work with (not just the create
+      screen), so chips wrap into fewer, wider rows instead of a tall
+      single column — this removes most of the height pressure before
+      it becomes a scrolling problem at all.
+   2. html/body never scroll here. Each screen's own container (.card,
+      .photo-content, .create-panel) is capped to the space actually
+      available and scrolls internally on its own if — and only if —
+      its content still doesn't fit a short window. The photo, the
+      heading, and the page around it never move; at most, a small
+      scrollbar appears inside that one panel.
+   ========================================================================= */
+
 @media (min-width: 900px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .wrap {
+    max-width: 720px;
+    height: 100dvh;
+    display: flex;
+    align-items: center;
+    padding-top: var(--sp-4);
+    padding-bottom: var(--sp-4);
+  }
+
+  #app {
+    width: 100%;
+  }
+
+  /* The create screen's split layout earns the widest stage; every
+     other screen (a question, a list of chips, a summary) still
+     reads better a little narrower than that. */
   body.is-create .wrap {
     max-width: 1080px;
+  }
+
+  .card {
+    max-height: calc(100dvh - 2 * var(--sp-4));
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Shared by .card, .photo-content, and .create-panel (all three are
+     display:flex; flex-direction:column at this width): the actual
+     scrolling region, holding everything except the action buttons.
+     flex:1 lets it fill whatever space .panel-footer doesn't need. */
+  .panel-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* old Edge */
+  }
+
+  .panel-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  /* The action buttons (Back/Next, Create link, Send, Yes/No...) —
+     pinned outside the scrolling region entirely, so they're always
+     reachable without scrolling no matter how long the content above
+     them gets. */
+  .panel-footer {
+    flex: none;
   }
 }
 
@@ -450,6 +517,20 @@ textarea:focus-visible {
   border-radius: 10px;
 }
 
+/* The "your link is ready" confirmation, shown inline within the
+   create screen's own scrollable panel rather than as a separate
+   card — on desktop, a second stacked card here would have nowhere
+   reachable to go once the page itself stops scrolling. */
+.result-box {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-4);
+  border-top: 2px dashed var(--muted);
+}
+
+.result-box h2 {
+  margin-bottom: 0.5rem;
+}
+
 /* =========================================================================
    5. CHIPS AND TILES
    ========================================================================= */
@@ -646,6 +727,90 @@ textarea:focus-visible {
    6. SMALL PIECES
    ========================================================================= */
 
+/* =========================================================================
+   The scroll hint
+   -------------------------------------------------------------------------
+   Stands in for the native scrollbar hidden above on desktop's
+   internally-scrollable panels (.card, .photo-content, .create-panel).
+   It's the last element inside whichever panel needs it, with a
+   negative top margin so it overlaps the final ~50px of real content
+   rather than adding extra scrollable space of its own.
+
+   position:sticky + bottom:0 does the actual "hint" work with no JS:
+   as long as there's more content below the current view, its natural
+   place in the flow is further down, so it stays pinned to the
+   bottom. The moment scrolling actually reaches the true end of
+   content, its natural position rises to meet bottom:0 and it simply
+   stops moving — it doesn't need to be told the scroll has ended.
+
+   JS only decides whether to show it at all (app.js toggles
+   .is-scrollable on the panel once, based on whether its content
+   actually overflows) — the appearing/disappearing as you scroll is
+   pure CSS.
+   ========================================================================= */
+
+.scroll-hint {
+  display: none;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  margin-top: -52px;
+  pointer-events: none;
+  z-index: 3;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.4rem;
+}
+
+.is-scrollable > .scroll-hint {
+  display: flex;
+}
+
+/* Light surfaces (the card, the create screen's form panel): a soft
+   fade toward the paper color with a dark chevron. */
+.card .scroll-hint,
+.create-panel .scroll-hint {
+  background: linear-gradient(to bottom, rgba(251, 248, 255, 0) 0%, var(--paper) 78%);
+}
+
+.card .scroll-hint svg,
+.create-panel .scroll-hint svg {
+  stroke: var(--ink);
+}
+
+/* Dark surfaces (the photo panels): a fade toward the same dark tone
+   the poster overlay already uses, with a light chevron. */
+.photo-content .scroll-hint {
+  background: linear-gradient(to bottom, rgba(10, 5, 15, 0) 0%, rgba(10, 5, 15, 0.6) 78%);
+}
+
+.photo-content .scroll-hint svg {
+  stroke: #fff;
+}
+
+.scroll-hint svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: hintBounce 1.6s ease-in-out infinite;
+}
+
+@keyframes hintBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50%      { transform: translateY(4px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll-hint svg {
+    animation: none;
+  }
+}
+
 .banner {
   display: flex;
   align-items: center;
@@ -739,12 +904,6 @@ textarea:focus-visible {
 
 .progress.on-photo span {
   background: #fff;
-}
-
-/* Keeps the dots clear of the placeholder caption in the top-right
-   corner of a photo screen. */
-.progress.on-photo {
-  padding-right: 132px;
 }
 
 .stepno {
