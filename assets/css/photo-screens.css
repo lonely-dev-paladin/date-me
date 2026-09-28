@@ -28,61 +28,83 @@
    ========================================================================= */
 
 :root {
-  --photo-invite: url('../images/global.jpg');
-  --photo-reveal: url('../images/global.jpg');
-  --photo-food:   url('../images/global.jpg');
-  --photo-drinks: url('../images/global.jpg');
-  --photo-places: url('../images/global.jpg');
-  --photo-vibe: url('../images/global.jpg');
-  --photo-after: url('../images/global.jpg');
-  --photo-details: url('../images/global.jpg');
-  --photo-when: url('../images/global.jpg');
-  --photo-note: url('../images/global.jpg');
-  --photo-create: url('../images/global.jpg');
+  --photo-invite: url("../images/global.jpg");
+  --photo-reveal: url("../images/global.jpg");
+  --photo-food: url("../images/global.jpg");
+  --photo-drinks: url("../images/global.jpg");
+  --photo-places: url("../images/global.jpg");
+  --photo-vibe: url("../images/global.jpg");
+  --photo-after: url("../images/global.jpg");
+  --photo-details: url("../images/global.jpg");
+  --photo-when: url("../images/global.jpg");
+  --photo-note: url("../images/global.jpg");
+  --photo-create: url("../images/global.jpg");
 }
 
 .photo-bg[data-photo="create"] {
-  background-image: var(--photo-create), linear-gradient(155deg, #3B1150 0%, #6E2A55 45%, #C9A15A 100%);
+  background-image:
+    var(--photo-create),
+    linear-gradient(155deg, #3b1150 0%, #6e2a55 45%, #c9a15a 100%);
 }
 
 .photo-bg[data-photo="invite"] {
-  background-image: var(--photo-invite), linear-gradient(155deg, #6E2A55 0%, #B0124A 45%, #E8955C 100%);
+  background-image:
+    var(--photo-invite),
+    linear-gradient(155deg, #6e2a55 0%, #b0124a 45%, #e8955c 100%);
 }
 
 .photo-bg[data-photo="reveal"] {
-  background-image: var(--photo-reveal), linear-gradient(155deg, #241143 0%, #6E2A55 55%, #C9A15A 100%);
+  background-image:
+    var(--photo-reveal),
+    linear-gradient(155deg, #241143 0%, #6e2a55 55%, #c9a15a 100%);
 }
 
 .photo-bg[data-photo="food"] {
-  background-image: var(--photo-food), linear-gradient(155deg, #7A2E20 0%, #C9622B 55%, #E8B84B 100%);
+  background-image:
+    var(--photo-food),
+    linear-gradient(155deg, #7a2e20 0%, #c9622b 55%, #e8b84b 100%);
 }
 
 .photo-bg[data-photo="drinks"] {
-  background-image: var(--photo-drinks), linear-gradient(155deg, #1E3A4C 0%, #2C6E7F 55%, #7FD6B0 100%);
+  background-image:
+    var(--photo-drinks),
+    linear-gradient(155deg, #1e3a4c 0%, #2c6e7f 55%, #7fd6b0 100%);
 }
 
 .photo-bg[data-photo="places"] {
-  background-image: var(--photo-places), linear-gradient(155deg, #241143 0%, #5B3B8C 55%, #B0124A 100%);
+  background-image:
+    var(--photo-places),
+    linear-gradient(155deg, #241143 0%, #5b3b8c 55%, #b0124a 100%);
 }
 
 .photo-bg[data-photo="vibe"] {
-  background-image: var(--photo-vibe), linear-gradient(155deg, #3B1150 0%, #A23B7C 55%, #FFB4C8 100%);
+  background-image:
+    var(--photo-vibe),
+    linear-gradient(155deg, #3b1150 0%, #a23b7c 55%, #ffb4c8 100%);
 }
 
 .photo-bg[data-photo="after"] {
-  background-image: var(--photo-after), linear-gradient(155deg, #0B1030 0%, #26205C 55%, #7B5CE0 100%);
+  background-image:
+    var(--photo-after),
+    linear-gradient(155deg, #0b1030 0%, #26205c 55%, #7b5ce0 100%);
 }
 
 .photo-bg[data-photo="details"] {
-  background-image: var(--photo-details), linear-gradient(155deg, #171018 0%, #3D2A1F 55%, #C9A15A 100%);
+  background-image:
+    var(--photo-details),
+    linear-gradient(155deg, #171018 0%, #3d2a1f 55%, #c9a15a 100%);
 }
 
 .photo-bg[data-photo="when"] {
-  background-image: var(--photo-when), linear-gradient(155deg, #16213A 0%, #3E5C76 55%, #F2C572 100%);
+  background-image:
+    var(--photo-when),
+    linear-gradient(155deg, #16213a 0%, #3e5c76 55%, #f2c572 100%);
 }
 
 .photo-bg[data-photo="note"] {
-  background-image: var(--photo-note), linear-gradient(155deg, #2B140A 0%, #6E3423 55%, #F2A65A 100%);
+  background-image:
+    var(--photo-note),
+    linear-gradient(155deg, #2b140a 0%, #6e3423 55%, #f2a65a 100%);
 }
 
 /* =========================================================================
@@ -99,37 +121,66 @@
   border: 2px solid var(--ink);
   box-shadow: 0 22px 44px -26px rgba(34, 20, 58, 0.4);
 
-  /* Tall enough to feel cinematic, capped so it never eats the
-     whole viewport on short phones — and never forces a page
-     scroll on its own when the actual content (like the invite's
-     few short lines) is much shorter than this minimum. 62vh keeps
-     the poster feel while leaving room for the banner and footer
-     link around it on a typical phone. */
-  min-height: min(62vh, 560px);
+  /* A definite height, not a minimum. A minimum lets a step with a
+     dozen chips grow taller than a step with three, so the card
+     visibly changes size as you move through the steps. A fixed
+     height keeps every step (and the invite and reveal) exactly the
+     same size; anything that doesn't fit scrolls inside the card
+     instead (see .panel-scroll in base.css).
+     The 9rem is the page chrome around the card (padding, the
+     "make your own" link, spacing), so on a phone the card fills
+     the screen instead of leaving a gap below it. */
+  height: min(calc(100dvh - 9rem), 700px);
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
 }
 
 @media (min-width: 900px) {
+  /* Desktop has the whole window to work with, so the card fills it
+     (up to a comfortable maximum) rather than using the phone height. */
   .photo-screen {
-    min-height: 0;
-    max-height: calc(100dvh - 2 * var(--sp-4));
+    height: min(calc(100dvh - 2 * var(--sp-4)), 720px);
   }
+}
 
-  /* The photo and its overlay always fill the panel; only the text
-     and chips scroll, and only if a short window genuinely can't
-     fit them all — the photo itself never moves. flex:1 is what
-     lets this pane actually reach the container's capped height, so
-     its own overflow scrolls instead of being clipped by the
-     photo-screen's rounded-corner overflow:hidden. */
-  .photo-content {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
+/* The photo and its overlay fill the card behind everything. This
+   layer holds the content on top of them, split into a scrolling
+   region (.panel-scroll) and a pinned footer (.panel-footer). The
+   padding lives on those two children rather than here, so scrolled
+   content slides away at the card's edge instead of vanishing along
+   an invisible line inset from it. */
+.photo-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-content .panel-scroll {
+  padding: var(--sp-5) var(--sp-4) 0;
+}
+
+.photo-content .panel-footer {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+/* Short content (the invite, the reveal, a step with few options)
+   sits at the bottom of the scroll area, poster-style, just above
+   the buttons. margin-top:auto on the first child does this without
+   the trap justify-content:flex-end has, where overflowing content
+   gets pushed above the top edge and can't be scrolled back to. */
+.photo-content .panel-scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-content .panel-scroll > * {
+  flex-shrink: 0;
+}
+
+.photo-content .panel-scroll > :first-child {
+  margin-top: auto;
 }
 
 .photo-bg {
@@ -160,7 +211,6 @@
   position: relative;
   z-index: 2;
   color: #fff;
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
 }
 
 .photo-content .to {
