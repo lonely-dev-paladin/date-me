@@ -32,12 +32,7 @@ export function tagStagger(container, selector) {
     var items = container.querySelectorAll(selector);
     items.forEach(function (el, i) {
         el.setAttribute('data-stagger', '');
-        // Capped so a long list (14 chips) still finishes cascading in
-        // about half a second after the screen appears. Without the cap,
-        // everything after the first handful waited its turn one by one,
-        // and the Next button — last in the DOM — showed up over a second
-        // late, which is too long to wait for the main way forward.
-        el.style.setProperty('--stagger-i', String(Math.min(i, 9)));
+        el.style.setProperty('--stagger-i', String(i));
     });
 }
 
