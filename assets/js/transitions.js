@@ -10,6 +10,10 @@
                       screen out, swap the HTML, fade the new one in
      - tagStagger()   marks a container's direct children so
                       transitions.css can reveal them one after another
+     - clearEnterTransform() drops the entrance animation's transform
+                      the moment it finishes — see the comment on it
+                      below, this is what makes touch-scrolling work
+                      on iOS inside the panels this animates
    ========================================================================= */
 
 var EXIT_MS = 180; // must match --dur-fast in tokens.css
@@ -32,8 +36,41 @@ export function tagStagger(container, selector) {
     var items = container.querySelectorAll(selector);
     items.forEach(function (el, i) {
         el.setAttribute('data-stagger', '');
-        el.style.setProperty('--stagger-i', String(i));
+        // Capped so a long list (14 chips) still finishes cascading in
+        // about half a second after the screen appears. Without the cap,
+        // everything after the first handful waited its turn one by one,
+        // and the Next button — last in the DOM — showed up over a second
+        // late, which is too long to wait for the main way forward.
+        el.style.setProperty('--stagger-i', String(Math.min(i, 9)));
     });
+}
+
+/**
+ * The .screen-enter animation ends on transform: translateY(0) scale(1)
+ * and keeps it there (that's what the "both" in the animation
+ * shorthand does — it holds the final frame instead of the transform
+ * reverting to none). translateY(0) scale(1) looks identical to no
+ * transform at all, but it isn't: it's still an active transform, and
+ * on iOS Safari specifically, a scrollable overflow:auto element
+ * nested inside an ancestor with ANY active transform — even an
+ * identity one like this — frequently stops responding to touch
+ * scrolling entirely. Every .panel-scroll lives inside #app, so this
+ * silently broke scrolling on a phone the moment a screen finished
+ * animating in.
+ *
+ * The fix: once the animation is actually done, drop the class. With
+ * no .screen-enter, #app has no transform rule left to apply, so it
+ * reverts to a true, honest "none" rather than a look-alike.
+ *
+ * @param {Element} app - the #app container
+ */
+function clearEnterTransform(app) {
+    var handler = function (e) {
+        if (e.target !== app || e.animationName !== 'screenEnter') return;
+        app.classList.remove('screen-enter');
+        app.removeEventListener('animationend', handler);
+    };
+    app.addEventListener('animationend', handler);
 }
 
 /**
@@ -50,6 +87,7 @@ export function mountScreen(app, html) {
     // screen-enter is added, or the animation can fail to restart.
     void app.offsetWidth;
     app.classList.add('screen-enter');
+    clearEnterTransform(app);
     tagStagger(app, STAGGER_SELECTOR);
 }
 
@@ -84,6 +122,7 @@ export function switchScreen(app, html, onSwapped) {
         app.classList.remove('screen-exit');
         void app.offsetWidth; // reflow, see mountScreen()
         app.classList.add('screen-enter');
+        clearEnterTransform(app);
         tagStagger(app, STAGGER_SELECTOR);
     }, EXIT_MS);
 }

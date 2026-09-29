@@ -28,17 +28,17 @@
    ========================================================================= */
 
 :root {
-  --photo-invite: url('../images/global.jpg');
-  --photo-reveal: url('../images/global.jpg');
-  --photo-food:   url('../images/global.jpg');
-  --photo-drinks: url('../images/global.jpg');
-  --photo-places: url('../images/global.jpg');
-  --photo-vibe: url('../images/global.jpg');
-  --photo-after: url('../images/global.jpg');
-  --photo-details: url('../images/global.jpg');
-  --photo-when: url('../images/global.jpg');
-  --photo-note: url('../images/global.jpg');
-  --photo-create: url('../images/global.jpg');
+  --photo-invite: none;
+  --photo-reveal: none;
+  --photo-food: none;
+  --photo-drinks: none;
+  --photo-places: none;
+  --photo-vibe: none;
+  --photo-after: none;
+  --photo-details: none;
+  --photo-when: none;
+  --photo-note: none;
+  --photo-create: none;
 }
 
 .photo-bg[data-photo="create"] {
@@ -99,37 +99,66 @@
   border: 2px solid var(--ink);
   box-shadow: 0 22px 44px -26px rgba(34, 20, 58, 0.4);
 
-  /* Tall enough to feel cinematic, capped so it never eats the
-     whole viewport on short phones — and never forces a page
-     scroll on its own when the actual content (like the invite's
-     few short lines) is much shorter than this minimum. 62vh keeps
-     the poster feel while leaving room for the banner and footer
-     link around it on a typical phone. */
-  min-height: min(62vh, 560px);
+  /* A definite height, not a minimum. A minimum lets a step with a
+     dozen chips grow taller than a step with three, so the card
+     visibly changes size as you move through the steps. A fixed
+     height keeps every step (and the invite and reveal) exactly the
+     same size; anything that doesn't fit scrolls inside the card
+     instead (see .panel-scroll in base.css).
+     The 9rem is the page chrome around the card (padding, the
+     "make your own" link, spacing), so on a phone the card fills
+     the screen instead of leaving a gap below it. */
+  height: min(calc(100dvh - 9rem), 700px);
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
 }
 
 @media (min-width: 900px) {
+  /* Desktop has the whole window to work with, so the card fills it
+     (up to a comfortable maximum) rather than using the phone height. */
   .photo-screen {
-    min-height: 0;
-    max-height: calc(100dvh - 2 * var(--sp-4));
+    height: min(calc(100dvh - 2 * var(--sp-4)), 720px);
   }
+}
 
-  /* The photo and its overlay always fill the panel; only the text
-     and chips scroll, and only if a short window genuinely can't
-     fit them all — the photo itself never moves. flex:1 is what
-     lets this pane actually reach the container's capped height, so
-     its own overflow scrolls instead of being clipped by the
-     photo-screen's rounded-corner overflow:hidden. */
-  .photo-content {
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
+/* The photo and its overlay fill the card behind everything. This
+   layer holds the content on top of them, split into a scrolling
+   region (.panel-scroll) and a pinned footer (.panel-footer). The
+   padding lives on those two children rather than here, so scrolled
+   content slides away at the card's edge instead of vanishing along
+   an invisible line inset from it. */
+.photo-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-content .panel-scroll {
+  padding: var(--sp-5) var(--sp-4) 0;
+}
+
+.photo-content .panel-footer {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+/* Short content (the invite, the reveal, a step with few options)
+   sits at the bottom of the scroll area, poster-style, just above
+   the buttons. margin-top:auto on the first child does this without
+   the trap justify-content:flex-end has, where overflowing content
+   gets pushed above the top edge and can't be scrolled back to. */
+.photo-content .panel-scroll {
+  display: flex;
+  flex-direction: column;
+}
+
+.photo-content .panel-scroll > * {
+  flex-shrink: 0;
+}
+
+.photo-content .panel-scroll > :first-child {
+  margin-top: auto;
 }
 
 .photo-bg {
@@ -160,7 +189,6 @@
   position: relative;
   z-index: 2;
   color: #fff;
-  padding: var(--sp-5) var(--sp-4) var(--sp-4);
 }
 
 .photo-content .to {
