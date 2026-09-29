@@ -203,12 +203,20 @@ import { mountScreen, switchScreen } from './transitions.js';
     var SCROLL_HINT_SVG =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
+    // Shows the hint only while there's still content below the current
+    // scroll position: hidden if the panel doesn't overflow at all, and
+    // hidden again once the person has scrolled to the very bottom.
+    function updateScrollHint(el) {
+        var overflows = el.scrollHeight > el.clientHeight + 1;
+        var atEnd = el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+        el.classList.toggle('is-scrollable', overflows && !atEnd);
+    }
+
     // Desktop hides the native scrollbar on .card / .photo-content /
     // .create-panel (see base.css) — this is what replaces it. Adds the
-    // hint element once per container, then toggles it on only when
-    // that container's content actually overflows (a short one just
-    // never gets it). See the .scroll-hint rules in base.css for how
-    // the fade-and-chevron itself works.
+    // hint element once per container, then updates whether it shows.
+    // See the .scroll-hint rules in base.css for how the fade-and-chevron
+    // itself works.
     function refreshScrollHints() {
         app.querySelectorAll('.panel-scroll').forEach(function (el) {
             if (!el.querySelector(':scope > .scroll-hint')) {
@@ -217,7 +225,7 @@ import { mountScreen, switchScreen } from './transitions.js';
                 hint.innerHTML = SCROLL_HINT_SVG;
                 el.appendChild(hint);
             }
-            el.classList.toggle('is-scrollable', el.scrollHeight > el.clientHeight + 1);
+            updateScrollHint(el);
         });
     }
 
@@ -1159,6 +1167,15 @@ import { mountScreen, switchScreen } from './transitions.js';
     document.addEventListener('focusin', function (e) {
         if (e.target.id === 'linkbox') e.target.select();
     });
+
+    // Scroll events don't bubble, so listen in the capture phase to catch
+    // scrolling inside any .panel-scroll and update its hint as it moves.
+    document.addEventListener('scroll', function (e) {
+        var el = e.target;
+        if (el && el.classList && el.classList.contains('panel-scroll')) {
+            updateScrollHint(el);
+        }
+    }, true);
 
     window.addEventListener('hashchange', function () {
         init();
