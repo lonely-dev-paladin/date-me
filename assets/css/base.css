@@ -186,7 +186,6 @@ p {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* old Edge */
@@ -198,6 +197,24 @@ p {
 
 .panel-footer {
   flex: none;
+}
+
+/* On mobile, the create panel and the cards grow to fit their content,
+   so the page scrolls, not the panel. Without this, a touch that lands
+   inside the card goes to a scroll container that has nothing to scroll
+   and never reaches the page. */
+.create-panel .panel-scroll,
+.card .panel-scroll {
+  overflow: visible;
+}
+
+/* On desktop they're height-bounded, so they scroll internally. */
+@media (min-width: 900px) {
+  .create-panel .panel-scroll,
+  .card .panel-scroll {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
 }
 
 /* The quiet, centered card used for forms: the create screen, the

@@ -28,17 +28,17 @@
    ========================================================================= */
 
 :root {
-  --photo-invite: none;
-  --photo-reveal: none;
-  --photo-food: none;
-  --photo-drinks: none;
-  --photo-places: none;
-  --photo-vibe: none;
-  --photo-after: none;
-  --photo-details: none;
-  --photo-when: none;
-  --photo-note: none;
-  --photo-create: none;
+  --photo-invite: url('../images/global.jpg');
+  --photo-reveal: url('../images/global.jpg');
+  --photo-food:   url('../images/global.jpg');
+  --photo-drinks: url('../images/global.jpg');
+  --photo-places: url('../images/global.jpg');
+  --photo-vibe: url('../images/global.jpg');
+  --photo-after: url('../images/global.jpg');
+  --photo-details: url('../images/global.jpg');
+  --photo-when: url('../images/global.jpg');
+  --photo-note: url('../images/global.jpg');
+  --photo-create: url('../images/global.jpg');
 }
 
 .photo-bg[data-photo="create"] {
