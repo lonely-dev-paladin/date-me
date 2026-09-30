@@ -398,9 +398,41 @@ a:focus-visible {
   margin-top: 1.75rem;
 }
 
+/* The dodging No button moves with the individual `translate` property
+   (set in app.js) so it never fights with `transform`, which the press
+   effect and the shake animation both use. */
 #nobtn {
   position: relative;
-  transition: transform 0.2s ease-out, box-shadow var(--dur-fast);
+  transition:
+    translate 0.2s ease-out,
+    transform var(--dur-fast) var(--ease-premium),
+    box-shadow var(--dur-fast);
+}
+
+/* Every time No dodges, app.js bumps --grow by one, and Yes gets a
+   little taller and bigger — a gentle nudge toward the right answer. */
+#yesbtn {
+  min-height: calc(60px + var(--grow, 0) * 8px);
+  font-size: calc(1.2rem + var(--grow, 0) * 0.07rem);
+  transition:
+    transform var(--dur-fast) var(--ease-premium),
+    box-shadow var(--dur-fast) var(--ease-premium),
+    background-color var(--dur-fast) var(--ease-premium),
+    min-height var(--dur-normal) var(--ease-premium),
+    font-size var(--dur-normal) var(--ease-premium);
+}
+
+/* Played on No once it's finally caught, just before moving on. */
+.shake {
+  animation: shake 0.45s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-9px); }
+  40%      { transform: translateX(9px); }
+  60%      { transform: translateX(-6px); }
+  80%      { transform: translateX(6px); }
 }
 
 /* =========================================================================
@@ -953,11 +985,13 @@ textarea:focus-visible {
   .skin,
   .toggle-track,
   .toggle-thumb,
-  #nobtn {
+  #nobtn,
+  #yesbtn {
     transition: none;
   }
 
-  .pop {
+  .pop,
+  .shake {
     animation: none;
   }
 }

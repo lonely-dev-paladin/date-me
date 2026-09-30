@@ -17,12 +17,13 @@
     10. START           — reads the URL, sets initial state, renders once
 
    Visual work (photo backgrounds, screen transitions, staggered chip
-   reveals) lives in photos.js and transitions.js — this file only
-   decides WHAT to show, never HOW it animates in.
+   reveals, confetti) lives in photos.js, transitions.js and confetti.js
+   — this file only decides WHAT to show, never HOW it animates in.
    ========================================================================= */
 
 import { photoBg } from './photos.js';
 import { mountScreen, switchScreen } from './transitions.js';
+import { burst } from './confetti.js';
 
 (function () {
     'use strict';
@@ -42,6 +43,22 @@ import { mountScreen, switchScreen } from './transitions.js';
 
     var DEFAULT_Q = 'Would you go on a date with me?';
     var TOTAL_STEPS = 8;
+
+    // What the dodging No button says after each dodge (index = number of
+    // dodges so far). The last line is what it says once it stops running.
+    var NO_LINES = [
+        'No',
+        'Are you sure?',
+        'Really?',
+        'Think again',
+        'Last chance...',
+        'Okay, I mean it'
+    ];
+
+    // How long the Yes celebration plays before moving on, and how long
+    // the No button shakes once it's finally caught.
+    var YES_DELAY_MS = 900;
+    var NO_SHAKE_MS = 500;
 
     // Which planner steps get a full-bleed photo background, and which
     // context (see photos.js) each one uses.
@@ -189,6 +206,10 @@ import { mountScreen, switchScreen } from './transitions.js';
 
     function setSkin(s) {
         document.documentElement.setAttribute('data-skin', s);
+    }
+
+    function prefersReducedMotion() {
+        return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
 
     // Grows a textarea to fit whatever's typed in it, instead of
@@ -577,7 +598,7 @@ import { mountScreen, switchScreen } from './transitions.js';
             '</div>' +
             '<div class="panel-footer">' +
             '<div class="stack">' +
-            '<button type="button" class="btn glass primary big" data-act="yes">Yes</button>' +
+            '<button type="button" class="btn glass primary big" id="yesbtn" data-act="yes">Yes</button>' +
             '<button type="button" class="btn glass big" id="nobtn" data-act="no">No</button>' +
             (inv.t ? '<button type="button" class="linkbtn on-photo" data-act="maybe">Let me think about it</button>' : '') +
             '</div>' +
@@ -837,7 +858,7 @@ import { mountScreen, switchScreen } from './transitions.js';
         var target = pendingScrollTo ? document.getElementById(pendingScrollTo) : null;
         pendingScrollTo = null;
 
-        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var reduceMotion = prefersReducedMotion();
 
         if (target) {
             // A specific element was asked for (the new invite link, say) —
@@ -905,12 +926,26 @@ import { mountScreen, switchScreen } from './transitions.js';
     var dodges = 0;
     var lastDodge = 0;
 
+    // True while a short celebration or shake is playing before the
+    // screen changes, so a second tap can't trigger it twice.
+    var busy = false;
+
+    // Each dodge: the No button jumps somewhere else, its label gets more
+    // desperate (see NO_LINES), and the Yes button grows a little.
+    // The jump uses the `translate` property rather than `transform`,
+    // so it never fights with the shake animation or the press effect.
     function dodge(btn) {
         dodges++;
         lastDodge = Date.now();
+
         var x = (Math.random() < 0.5 ? -1 : 1) * (50 + Math.random() * 60);
         var y = (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 50);
-        btn.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+        btn.style.translate = x + 'px ' + y + 'px';
+
+        btn.textContent = NO_LINES[Math.min(dodges, NO_LINES.length - 1)];
+
+        var yes = document.getElementById('yesbtn');
+        if (yes) yes.style.setProperty('--grow', String(dodges));
     }
 
     function dodgeOn() {
@@ -924,6 +959,12 @@ import { mountScreen, switchScreen } from './transitions.js';
         el.classList.remove('pop');
         void el.offsetWidth; // reflow, lets the animation restart if it's still mid-way
         el.classList.add('pop');
+    }
+
+    function vibrate(pattern) {
+        if (navigator.vibrate) {
+            try { navigator.vibrate(pattern); } catch (e) { /* not supported */ }
+        }
     }
 
     function validateDraft() {
@@ -996,9 +1037,26 @@ import { mountScreen, switchScreen } from './transitions.js';
                 break;
 
             case 'yes':
-                state.screen = inv.y ? 'reveal' : 'plan';
-                state.step = 0;
-                render();
+                if (busy) return;
+                busy = true;
+
+                // The emotional peak of the whole app: pop the button,
+                // buzz the phone, fire confetti from where they tapped,
+                // and let it play for a moment before moving on. The
+                // confetti canvas lives on <body>, so it keeps going
+                // through the screen change.
+                popIn(el);
+                vibrate([40, 30, 80]);
+
+                var box = el.getBoundingClientRect();
+                burst(box.left + box.width / 2, box.top + box.height / 2);
+
+                setTimeout(function () {
+                    busy = false;
+                    state.screen = inv.y ? 'reveal' : 'plan';
+                    state.step = 0;
+                    render();
+                }, prefersReducedMotion() ? 0 : YES_DELAY_MS);
                 break;
 
             case 'startplan':
@@ -1012,9 +1070,25 @@ import { mountScreen, switchScreen } from './transitions.js';
                     dodge(el);
                     return;
                 }
-                state.reply = 'Hi ' + inv.a + ', thank you for asking. I\u2019m going to say no, but I appreciate that you asked.';
-                state.screen = 'no';
-                render();
+                if (busy) return;
+
+                var goNo = function () {
+                    busy = false;
+                    state.reply = 'Hi ' + inv.a + ', thank you for asking. I\u2019m going to say no, but I appreciate that you asked.';
+                    state.screen = 'no';
+                    render();
+                };
+
+                // If the button had been running away and they finally
+                // caught it, give it a little shake before moving on.
+                if (dodges > 0 && !prefersReducedMotion()) {
+                    busy = true;
+                    el.classList.add('shake');
+                    vibrate([30, 40, 30, 40, 30]);
+                    setTimeout(goNo, NO_SHAKE_MS);
+                } else {
+                    goNo();
+                }
                 break;
 
             case 'maybe':
@@ -1201,6 +1275,7 @@ import { mountScreen, switchScreen } from './transitions.js';
         state.preview = false;
         state.step = 0;
         state.link = '';
+        busy = false;
 
         if (invite) {
             state.invite = invite;
